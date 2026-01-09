@@ -23,3 +23,16 @@ fun ICT602MY_VOLTheme(
         content = content
     )
 }
+
+private val LightColorScheme = lightColorScheme()
+
+@Composable
+fun EventTest3Theme(
+    content: @Composable () -> Unit
+) {
+    MaterialTheme(
+        colorScheme = LightColorScheme,
+        typography = Typography,
+        content = content
+    )
+}
