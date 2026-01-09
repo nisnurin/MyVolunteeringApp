@@ -126,7 +126,7 @@ class MainActivity : ComponentActivity() {
 
     // ===================== HOME SCREEN =====================
     @Composable
-    fun MainScreen() {
+    fun HomePage() {
         var selectedTab by remember { mutableStateOf(0) }
 
         Scaffold(
@@ -172,7 +172,7 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun PreviewApp() {
         EventTest3Theme {
-            MainScreen()
+            HomePage()
         }
     }
 }
