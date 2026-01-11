@@ -16,7 +16,7 @@ import androidx.compose.ui.unit.sp
 import com.example.ict602my_vol.R
 
 @Composable
-fun VolunteerScreen() {
+fun VolunteerScreen(onSignUpSuccess: () -> Unit) {
     var fullName by remember { mutableStateOf("") }
     var nationality by remember { mutableStateOf("") }
     var phone by remember { mutableStateOf("") }
@@ -74,7 +74,7 @@ fun VolunteerScreen() {
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-                onClick = { /* Logik Sign Up */ },
+                onClick = { onSignUpSuccess() },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = RoundedCornerShape(16.dp)
             ) {

@@ -11,7 +11,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun MainScreen(onGoogleClick: () -> Unit) {
+fun MainScreen(onGoogleClick: () -> Unit, onSignUpSuccess: () -> Unit) {
     var selectedRole by remember { mutableStateOf("Volunteer") }
 
     Column(
@@ -49,7 +49,7 @@ fun MainScreen(onGoogleClick: () -> Unit) {
 
         // Bahagian Kandungan
         if (selectedRole == "Volunteer") {
-            VolunteerScreen() // Panggil borang volunteer
+            VolunteerScreen(onSignUpSuccess = onSignUpSuccess) // Panggil borang volunteer
         } else {
             AdminScreen(
                 onGoogleClick = onGoogleClick,

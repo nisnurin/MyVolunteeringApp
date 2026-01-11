@@ -33,8 +33,8 @@ fun BottomNavigationBar(selected: Int, onSelect: (Int) -> Unit) {
             alwaysShowLabel = false
         )
         NavigationBarItem(
-            selected = selected == 2,
-            onClick = { onSelect(2) },
+            selected = selected == 2 || selected == 3,
+            onClick = { onSelect(2) }, // Clicking always takes you to Profile first
             icon = { Icon(Icons.Default.Person, null) },
             label = { Spacer(Modifier.size(0.dp)) },
             alwaysShowLabel = false

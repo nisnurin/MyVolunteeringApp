@@ -6,7 +6,6 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.runtime.*
 import com.example.ict602my_vol.ui.screens.MainScreen
 import com.example.ict602my_vol.ui.screens.WelcomeScreen
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -29,8 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.ict602my_vol.data.Event
-import com.example.ict602my_vol.data.Organizer
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ict602my_vol.ui.home.HomeScreen
 import com.example.ict602my_vol.ui.BottomNavigationBar
 import com.example.ict602my_vol.ui.theme.EventTest3Theme
@@ -57,7 +55,6 @@ class MainActivity : ComponentActivity() {
         googleSignInClient = GoogleSignIn.getClient(this, gso)
 
         setContent {
-            AppRoot()
             EventTest3Theme {
                 AppRoot()
             }
@@ -86,8 +83,12 @@ class MainActivity : ComponentActivity() {
             "Main" -> MainScreen(
                 onGoogleClick = {
                     signInWithGoogle()
+                },
+                onSignUpSuccess = {
+                    currentScreen = "Home"
                 }
             )
+            "Home" -> HomePage()
         }
     }
 
@@ -126,43 +127,26 @@ class MainActivity : ComponentActivity() {
 
     // ===================== HOME SCREEN =====================
     @Composable
-    fun HomePage() {
+    fun HomePage(userViewModel: UserViewModel = viewModel()) {
         var selectedTab by remember { mutableStateOf(0) }
 
         Scaffold(
             bottomBar = {
-                BottomNavigationBar(selectedTab) { selectedTab = it }
+                BottomNavigationBar(selected = selectedTab, onSelect = { selectedTab = it })
             }
-        ) { padding ->
+        ) { paddingValues ->
             when (selectedTab) {
-                0 -> HomeScreen(padding)
-                1 -> NotificationScreen(padding)
-                2 -> ProfileScreen(padding)
+                0 -> HomeScreen(paddingValues)
+                1 -> NotificationScreen(paddingValues, userViewModel)
+                2 -> ProfileScreen(
+                    padding = paddingValues,
+                    userViewModel = userViewModel,
+                    onNavigateToActivities = { selectedTab = 3 })
+                3 -> ActivityScreen(
+                    padding = paddingValues,
+                    onNavigateToProfile = { selectedTab = 2 }
+                )
             }
-        }
-    }
-
-
-    // ===================== OTHER SCREENS =====================
-    @Composable
-    fun NotificationScreen(padding: PaddingValues) {
-        Box(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize(), contentAlignment = Alignment.Center
-        ) {
-            Text("Notification Screen")
-        }
-    }
-
-    @Composable
-    fun ProfileScreen(padding: PaddingValues) {
-        Box(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize(), contentAlignment = Alignment.Center
-        ) {
-            Text("Profile Screen")
         }
     }
 
