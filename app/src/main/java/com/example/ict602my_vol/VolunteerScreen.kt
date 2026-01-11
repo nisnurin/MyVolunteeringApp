@@ -83,3 +83,15 @@ fun VolunteerScreen(onSignUpSuccess: () -> Unit) {
         }
     }
 }
+@Composable
+fun VolunteerScreen(
+    onSignUpSuccess: () -> Unit,
+    onSignUpClick: () -> Unit // <--- Tambah ni
+) {
+    // Cari butang Sign Up kau yang asal:
+    Button(
+        onClick = onSignUpClick // <--- Ganti onClick asal dengan ni
+    ) {
+        Text("Sign Up")
+    }
+}

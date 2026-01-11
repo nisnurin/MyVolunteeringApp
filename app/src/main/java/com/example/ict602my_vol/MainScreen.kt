@@ -61,3 +61,4 @@ fun MainScreen(onGoogleClick: () -> Unit, onSignUpSuccess: () -> Unit) {
         }
     }
 }
+
