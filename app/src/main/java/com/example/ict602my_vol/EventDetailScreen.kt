@@ -55,7 +55,8 @@ fun EventDetailsScreenPreview() {
 
     EventDetailsScreen(
         event = dummyEvent,
-        onBackClick = {}
+        onBackClick = {},
+        onRegisterClick = {}
     )
 }
 
@@ -65,6 +66,7 @@ fun EventDetailsScreenPreview() {
 fun EventDetailsScreen(
     event: Event,
     onBackClick: () -> Unit,
+    onRegisterClick: () -> Unit
 ) {
     val context = LocalContext.current
     val eventDetails = event
@@ -87,7 +89,7 @@ fun EventDetailsScreen(
         bottomBar = {
             // bottomBar for Register button
             Column(modifier = Modifier.background(PrimaryBackground).padding(bottom = 10.dp)) {
-                RegisterButton()
+                RegisterButton(onClick = onRegisterClick)
             }
         }
     ) { padding ->
@@ -250,9 +252,9 @@ fun AboutSection() {
 }
 
 @Composable
-fun RegisterButton() {
+fun RegisterButton(onClick: () -> Unit) {
     Button(
-        onClick = { /* Handle pendaftaran */ },
+        onClick = onClick,
         shape = RoundedCornerShape(50.dp),
         colors = ButtonDefaults.buttonColors(containerColor = DarkBackground),
         modifier = Modifier
@@ -300,3 +302,4 @@ fun openMaps(context: Context, location: String) {
         context.startActivity(browserIntent)
     }
 }
+

@@ -28,7 +28,11 @@ import com.example.ict602my_vol.OrganizersScreen
 
 // ===================== HOME SCREEN =====================
 @Composable
-fun HomeScreen(padding: PaddingValues) {
+fun HomeScreen(paddingValues: PaddingValues,
+               onRegisterClick: () -> Unit,
+               shouldReset: Boolean = false,
+               onResetComplete: () -> Unit = {}
+) {
     val homeNavController = rememberNavController()
 
     // --- SAMPLE DATA  ---
@@ -59,12 +63,19 @@ fun HomeScreen(padding: PaddingValues) {
         Event("Seaboree", "Beach Cleaning", "1 Jun 2026", "Muar", R.drawable.location_pic),
         Event("Scout", "Bubur Lambuk", "10 Julai 2026", "Subang", R.drawable.location_pic)
     )
-
+    androidx.compose.runtime.LaunchedEffect(shouldReset) {
+        if (shouldReset) {
+            homeNavController.navigate("event_list_screen") {
+                popUpTo("event_list_screen") { inclusive = true }
+            }
+            onResetComplete()
+        }
+    }
 
     NavHost(
         navController = homeNavController,
         startDestination = "event_list_screen",
-        modifier = Modifier.padding(padding) // Padding Bottom Bar
+        modifier = Modifier.padding(paddingValues) // Padding Bottom Bar
     ) {
 
         // --- ROUTE 1: EVENT LIST SCREEN ---
@@ -127,7 +138,7 @@ fun HomeScreen(padding: PaddingValues) {
                 onBackClick = {
                     homeNavController.popBackStack()
                 },
-
+                onRegisterClick = onRegisterClick
                 )
         }
 

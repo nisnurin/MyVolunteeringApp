@@ -40,10 +40,10 @@ fun ViewRegistrationScreen(data: RegistrationData, onBackToHome: () -> Unit, onB
                 Text("Email : ${data.email}", color = Color.Black)
                 Text("Contact : ${data.emergencyContactNumber}", color = Color.Black)
 
+
                 Spacer(modifier = Modifier.height(40.dp))
 
-                Button(onClick = onBackToEvent, modifier = Modifier.fillMaxWidth().height(50.dp), colors = ButtonDefaults.buttonColors(containerColor = Color.Black)) { Text("Back to Event") }
-                Spacer(modifier = Modifier.height(10.dp))
+
                 Button(onClick = onBackToHome, modifier = Modifier.fillMaxWidth().height(50.dp), colors = ButtonDefaults.buttonColors(containerColor = Color.Black)) { Text("Back to Home") }
             }
         }

@@ -19,7 +19,8 @@ import androidx.compose.ui.unit.sp
 fun SuccessScreen(
     eventName: String,
     onViewRegistration: () -> Unit,
-    onBackToHome: () -> Unit
+    onBackToHome: () -> Unit,
+    onBackToEvent: () -> Unit
 ) {
     Box(
         modifier = Modifier.fillMaxSize().background(Color.White).padding(24.dp),
@@ -64,7 +65,7 @@ fun SuccessScreen(
                 Spacer(modifier = Modifier.height(40.dp))
 
                 SuccessButton(text = "View My Registration", onClick = onViewRegistration)
-                SuccessButton(text = "Back to Event", onClick = { /* navigasi */ })
+                SuccessButton(text = "Back to Event", onClick = onBackToEvent)
                 SuccessButton(text = "Back to Home", onClick = onBackToHome)
             }
         }

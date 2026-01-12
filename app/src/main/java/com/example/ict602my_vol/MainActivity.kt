@@ -32,8 +32,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ict602my_vol.ui.home.HomeScreen
 import com.example.ict602my_vol.ui.BottomNavigationBar
 import com.example.ict602my_vol.ui.theme.EventTest3Theme
-
-
+import com.example.ict602my_vol.ui.screens.RegisterScreen
+import com.example.ict602my_vol.ui.screens.SuccessScreen
+import com.example.ict602my_vol.ui.screens.ViewRegistrationScreen
+import com.example.ict602my_vol.data.RegistrationData
+import androidx.compose.runtime.getValue // Untuk 'by remember'
+import androidx.compose.runtime.setValue // Untuk 'by remember'
+import com.example.ict602my_vol.data.Event // PENTING: Import data class Event
 class MainActivity : ComponentActivity() {
 
     private lateinit var auth: FirebaseAuth
@@ -126,31 +131,91 @@ class MainActivity : ComponentActivity() {
 
 
     // ===================== HOME SCREEN =====================
+    // ===================== HOME SCREEN =====================
     @Composable
     fun HomePage(userViewModel: UserViewModel = viewModel()) {
         var selectedTab by remember { mutableStateOf(0) }
+        var currentSubScreen by remember { mutableStateOf("Main") }
+        var registrationData by remember { mutableStateOf(com.example.ict602my_vol.data.RegistrationData()) }
+        var showEventDetail by remember { mutableStateOf(false) }
+        var selectedEvent by remember { mutableStateOf<Event?>(null) }
 
+        // SATU SCAFFOLD SAHAJA SEBAGAI BASE
         Scaffold(
             bottomBar = {
-                BottomNavigationBar(selected = selectedTab, onSelect = { selectedTab = it })
+                // Bottom bar cuma muncul kalau bukan tengah register/success
+                if (currentSubScreen == "Main") {
+                    BottomNavigationBar(
+                        selected = selectedTab,
+                        onSelect = { selectedTab = it
+                            if (it != 0) showEventDetail = false
+                        }
+                    )
+                }
             }
         ) { paddingValues ->
-            when (selectedTab) {
-                0 -> HomeScreen(paddingValues)
-                1 -> NotificationScreen(paddingValues, userViewModel)
-                2 -> ProfileScreen(
-                    padding = paddingValues,
-                    userViewModel = userViewModel,
-                    onNavigateToActivities = { selectedTab = 3 })
-                3 -> ActivityScreen(
-                    padding = paddingValues,
-                    onNavigateToProfile = { selectedTab = 2 }
-                )
+            // Box ni penting untuk tindihkan skrin Success atas HomeScreen
+            Box(modifier = Modifier.fillMaxSize()) {
+
+                // --- LAYER 1: HOMESCREEN (Sentiasa 'hidup' kat belakang) ---
+                when (selectedTab) {
+                    0 -> HomeScreen(
+                        paddingValues = paddingValues,
+                        onRegisterClick = { currentSubScreen = "Register" }
+                    )
+                    1 -> NotificationScreen(paddingValues, userViewModel)
+                    2 -> ProfileScreen(
+                        padding = paddingValues,
+                        userViewModel = userViewModel,
+                        onNavigateToActivities = { selectedTab = 3 })
+                    3 -> ActivityScreen(
+                        padding = paddingValues,
+                        onNavigateToProfile = { selectedTab = 2 }
+                    )
+                }
+
+                // --- LAYER 2: OVERLAY (Hanya muncul bila currentSubScreen bukan "Main") ---
+                if (currentSubScreen != "Main") {
+                    when (currentSubScreen) {
+                        "Register" -> {
+                            RegisterScreen(
+                                onBack = { currentSubScreen = "Main" },
+                                onRegisterSuccess = { data ->
+                                    registrationData = data
+                                    currentSubScreen = "Success"
+                                }
+                            )
+                        }
+                        "Success" -> {
+                            SuccessScreen(
+                                eventName = registrationData.eventName,
+                                onViewRegistration = { currentSubScreen = "View" },
+                                onBackToHome = {
+
+                                    selectedTab = 0
+                                    currentSubScreen = "Main"
+
+                                },
+                                onBackToEvent = {
+                                    currentSubScreen = "Main"
+                                }
+                            )
+                        }
+                        "View" -> {
+                            ViewRegistrationScreen(
+                                data = registrationData,
+                                onBackToHome = {
+                                    currentSubScreen = "Main"
+                                    selectedTab = 0
+                                },
+                                onBackToEvent = { currentSubScreen = "Main" }
+                            )
+                        }
+                    }
+                }
             }
         }
     }
-
-
     // ===================== PREVIEW =====================
     @Preview(showBackground = true)
     @Composable
