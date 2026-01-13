@@ -5,31 +5,28 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import com.google.firebase.firestore.FirebaseFirestore
 
-// 1. Data structure for each Event item
+// 1. Updated Data Structure - id MUST be String for Firebase Auto-IDs
 data class VolEvent(
-    val id: Int,
-    val name: String,
-    val organizer: String,
-    val date: String,
-    val location: String
+    val id: String = "",
+    val name: String = "",
+    val organizer: String = "",
+    val date: String = "",
+    val location: String = ""
 )
 
-// 2. The ViewModel to handle the data and search logic
 class ManageEventViewModel : ViewModel() {
 
-    // This is the source list of events (simulating your data)
-    private val _allEvents = mutableStateListOf(
-        VolEvent(1, "Summer Radish Festival", "Local Farm Org", "Oct 25, 2025", "Central Park"),
-        VolEvent(2, "Tech Meetup 2025", "Dev Community", "Nov 01, 2025", "Convention Center"),
-        VolEvent(3, "Art Workshop", "Creative Minds", "Nov 15, 2025", "City Studio"),
-        VolEvent(4, "Beach Cleanup", "Eco-Warriors", "Dec 05, 2025", "Port Dickson")
-    )
+    private val db = FirebaseFirestore.getInstance()
 
-    // This holds the text typed into the search bar
+    // This list stays synced with Firebase
+    private val _allEvents = mutableStateListOf<VolEvent>()
+
+    // Search query state for the search bar
     var searchQuery by mutableStateOf("")
 
-    // This is the list that actually displays (filtered by search)
+    // The list that the UI observes (LazyColumn items)
     val filteredEvents: List<VolEvent>
         get() = if (searchQuery.isEmpty()) {
             _allEvents
@@ -37,8 +34,48 @@ class ManageEventViewModel : ViewModel() {
             _allEvents.filter { it.name.contains(searchQuery, ignoreCase = true) }
         }
 
-    // Function to delete an event
+    init {
+        // Automatically start fetching data when the ViewModel is created
+        listenToEvents()
+    }
+
+    /**
+     * Real-time listener: This will trigger every time a document is
+     * Added, Deleted, or Modified in the 'events' collection.
+     */
+    private fun listenToEvents() {
+        db.collection("events").addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                // You can log error here if needed
+                return@addSnapshotListener
+            }
+
+            if (snapshot != null) {
+                _allEvents.clear()
+                for (doc in snapshot.documents) {
+                    val event = VolEvent(
+                        id = doc.id, // The unique random ID from Firebase
+                        name = doc.getString("name") ?: "",
+                        organizer = doc.getString("organizer") ?: "General",
+                        date = doc.getString("date") ?: "",
+                        location = doc.getString("location") ?: ""
+                    )
+                    _allEvents.add(event)
+                }
+            }
+        }
+    }
+
+    /**
+     * Delete an event from the Cloud Firestore database
+     */
     fun deleteEvent(event: VolEvent) {
-        _allEvents.remove(event)
+        db.collection("events").document(event.id).delete()
+            .addOnSuccessListener {
+                // Success - The SnapshotListener will automatically handle UI removal
+            }
+            .addOnFailureListener {
+                // Handle deletion error
+            }
     }
 }
