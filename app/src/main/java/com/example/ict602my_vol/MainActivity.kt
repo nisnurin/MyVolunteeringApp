@@ -6,40 +6,30 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.ict602my_vol.data.Event
+import com.example.ict602my_vol.data.RegistrationData
+import com.example.ict602my_vol.ui.BottomNavigationBar
+import com.example.ict602my_vol.ui.home.HomeScreen
 import com.example.ict602my_vol.ui.screens.MainScreen
+import com.example.ict602my_vol.ui.screens.RegisterScreen
+import com.example.ict602my_vol.ui.screens.SuccessScreen
+import com.example.ict602my_vol.ui.screens.ViewRegistrationScreen
 import com.example.ict602my_vol.ui.screens.WelcomeScreen
+import com.example.ict602my_vol.ui.theme.EventTest3Theme
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.ict602my_vol.ui.home.HomeScreen
-import com.example.ict602my_vol.ui.BottomNavigationBar
-import com.example.ict602my_vol.ui.theme.EventTest3Theme
-import com.example.ict602my_vol.ui.screens.RegisterScreen
-import com.example.ict602my_vol.ui.screens.SuccessScreen
-import com.example.ict602my_vol.ui.screens.ViewRegistrationScreen
-import com.example.ict602my_vol.data.RegistrationData
-import androidx.compose.runtime.getValue // Untuk 'by remember'
-import androidx.compose.runtime.setValue // Untuk 'by remember'
-import com.example.ict602my_vol.data.Event // PENTING: Import data class Event
-import androidx.lifecycle.viewmodel.compose.viewModel
+
 class MainActivity : ComponentActivity() {
 
     private lateinit var auth: FirebaseAuth
@@ -52,7 +42,7 @@ class MainActivity : ComponentActivity() {
 
         auth = FirebaseAuth.getInstance()
 
-        // Pastikan default_web_client_id wujud dalam strings.xml anda
+        // Ensure default_web_client_id exists in your strings.xml
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken(getString(R.string.default_web_client_id))
             .requestEmail()
@@ -65,7 +55,6 @@ class MainActivity : ComponentActivity() {
                 AppRoot()
             }
         }
-
     }
 
     private fun signInWithGoogle() {
@@ -89,27 +78,29 @@ class MainActivity : ComponentActivity() {
             )
 
             "Main" -> MainScreen(
-<<<<<<< HEAD
                 onGoogleClick = {
                     signInWithGoogle()
                 },
-                onSignUpSuccess = TODO()
+                onSignUpSuccess = {
+                    currentScreen = "Home"
+                }
             )
 
-            // --- ADD THIS BLOCK ---
             "ManageEvent" -> ManageEventScreen(
                 viewModel = manageEventViewModel,
                 onBackClick = {
-                    currentScreen = "ManageEvent"
+                    currentScreen = "Main"
                 },
                 onAddEventClick = {
-                    // We will build this in the next step
                     Toast.makeText(this@MainActivity, "Add Event Clicked", Toast.LENGTH_SHORT).show()
-=======
+                }
+            )
 
-                onSignUpSuccess = {
-                    currentScreen = "Home"
->>>>>>> 0f2b62cba1a7ade603356c4641b8bf03bbe15fca
+            "Home" -> HomePage(
+                onLogout = {
+                    auth.signOut()
+                    googleSignInClient.signOut()
+                    currentScreen = "Welcome"
                 }
             )
         }
@@ -149,9 +140,8 @@ class MainActivity : ComponentActivity() {
 
 
     // ===================== HOME SCREEN =====================
-    // ===================== HOME SCREEN =====================
     @Composable
-    fun HomePage(userViewModel: UserViewModel = viewModel()) {
+    fun HomePage(userViewModel: UserViewModel = viewModel(), onLogout: () -> Unit) {
         var selectedTab by remember { mutableStateOf(0) }
         var currentSubScreen by remember { mutableStateOf("Main") }
         var registrationData by remember { mutableStateOf(RegistrationData()) }
@@ -165,7 +155,8 @@ class MainActivity : ComponentActivity() {
                 if (currentSubScreen == "Main") {
                     BottomNavigationBar(
                         selected = selectedTab,
-                        onSelect = { selectedTab = it
+                        onSelect = { 
+                            selectedTab = it
                             if (it != 0) showEventDetail = false
                         }
                     )
@@ -185,7 +176,9 @@ class MainActivity : ComponentActivity() {
                     2 -> ProfileScreen(
                         padding = paddingValues,
                         userViewModel = userViewModel,
-                        onNavigateToActivities = { selectedTab = 3 })
+                        onNavigateToActivities = { selectedTab = 3 },
+                        onLogout = onLogout
+                    )
                     3 -> ActivityScreen(
                         padding = paddingValues,
                         onNavigateToProfile = { selectedTab = 2 }
@@ -210,10 +203,8 @@ class MainActivity : ComponentActivity() {
                                 eventName = registrationData.eventName,
                                 onViewRegistration = { currentSubScreen = "View" },
                                 onBackToHome = {
-
                                     selectedTab = 0
                                     currentSubScreen = "Main"
-
                                 },
                                 onBackToEvent = {
                                     currentSubScreen = "Main"
@@ -235,12 +226,13 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+    
     // ===================== PREVIEW =====================
     @Preview(showBackground = true)
     @Composable
     fun PreviewApp() {
         EventTest3Theme {
-            HomePage()
+            HomePage(onLogout = {})
         }
     }
 }
