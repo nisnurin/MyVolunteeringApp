@@ -86,9 +86,7 @@ class MainActivity : ComponentActivity() {
             )
 
             "Main" -> MainScreen(
-                onGoogleClick = {
-                    signInWithGoogle()
-                },
+
                 onSignUpSuccess = {
                     currentScreen = "Home"
                 }

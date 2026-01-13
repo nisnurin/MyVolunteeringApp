@@ -1,5 +1,6 @@
 package com.example.ict602my_vol.ui.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -8,18 +9,27 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ict602my_vol.R
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 
 @Composable
 fun AdminScreen(
     onGoogleClick: () -> Unit = {},
-    onContinueClick: () -> Unit = {}
+    onContinueSuccess: () -> Unit = {}
 ) {
     var email by remember { mutableStateOf("") }
+    var name by remember { mutableStateOf("") }
+
+    val context = LocalContext.current
+    val auth = Firebase.auth
+    val db = Firebase.firestore
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -40,6 +50,16 @@ fun AdminScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
         OutlinedTextField(
+            value = name,
+            onValueChange = { name = it },
+            label = { Text("Full Name") },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+       //Field Email
+        OutlinedTextField(
             value = email,
             onValueChange = { email = it },
             label = { Text("Email") },
@@ -47,10 +67,36 @@ fun AdminScreen(
         )
 
         Spacer(modifier = Modifier.height(24.dp))
-
         // Butang Continue ke Volunteer Page
         Button(
-            onClick = onContinueClick,
+            onClick = {
+                if (name.isNotEmpty() && email.isNotEmpty()) {
+                    auth.signInAnonymously().addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            val userId = auth.currentUser?.uid
+                            if (userId != null) {
+                                val adminData = hashMapOf(
+                                    "fullName" to name,
+                                    "email" to email,
+                                    "role" to "admin" // Kunci utama untuk Danish
+                                )
+
+                                db.collection("users").document(userId)
+                                    .set(adminData)
+                                    .addOnSuccessListener {
+                                        Toast.makeText(context, "Admin Registered Successfully!", Toast.LENGTH_SHORT).show()
+                                        onContinueSuccess() // Wayar Khairi untuk pindah screen
+                                    }
+                                    .addOnFailureListener { e ->
+                                        Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                                    }
+                            }
+                        }
+                    }
+                } else {
+                    Toast.makeText(context, "Please fill in all fields", Toast.LENGTH_SHORT).show()
+                }
+            },
             modifier = Modifier.fillMaxWidth().height(56.dp),
             shape = RoundedCornerShape(16.dp)
         ) {
@@ -59,9 +105,9 @@ fun AdminScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-            Divider(color = Color.Gray.copy(alpha = 0.5f), thickness = 1.dp, modifier = Modifier.weight(1f))
+            HorizontalDivider(color = Color.Gray.copy(alpha = 0.5f), thickness = 1.dp, modifier = Modifier.weight(1f))
             Text("  or  ", color = Color.Gray, fontSize = 14.sp)
-            Divider(color = Color.Gray.copy(alpha = 0.5f), thickness = 1.dp, modifier = Modifier.weight(1f))
+            HorizontalDivider(color = Color.Gray.copy(alpha = 0.5f), thickness = 1.dp, modifier = Modifier.weight(1f))
         }
         Spacer(modifier = Modifier.height(16.dp))
 
