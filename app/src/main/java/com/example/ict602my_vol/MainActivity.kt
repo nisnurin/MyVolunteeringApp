@@ -89,6 +89,7 @@ class MainActivity : ComponentActivity() {
             )
 
             "Main" -> MainScreen(
+<<<<<<< HEAD
                 onGoogleClick = {
                     signInWithGoogle()
                 },
@@ -104,6 +105,11 @@ class MainActivity : ComponentActivity() {
                 onAddEventClick = {
                     // We will build this in the next step
                     Toast.makeText(this@MainActivity, "Add Event Clicked", Toast.LENGTH_SHORT).show()
+=======
+
+                onSignUpSuccess = {
+                    currentScreen = "Home"
+>>>>>>> 0f2b62cba1a7ade603356c4641b8bf03bbe15fca
                 }
             )
         }

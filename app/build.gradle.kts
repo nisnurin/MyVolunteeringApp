@@ -74,6 +74,14 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended:1.7.0")
     implementation("androidx.compose.material:material-icons-extended")
     implementation("io.coil-kt:coil-compose:2.6.0")
+<<<<<<< HEAD
     implementation("androidx.compose.material:material-icons-extended:1.7.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.2")
+=======
+ // firebase auth
+    implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.firebase:firebase-firestore-ktx")
+
+    implementation("com.google.android.gms:play-services-auth:21.0.0")
+>>>>>>> 0f2b62cba1a7ade603356c4641b8bf03bbe15fca
 }

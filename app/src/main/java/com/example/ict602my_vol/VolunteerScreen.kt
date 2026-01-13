@@ -1,5 +1,6 @@
 package com.example.ict602my_vol.ui.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -10,10 +11,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ict602my_vol.R
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 
 @Composable
 fun VolunteerScreen(onSignUpSuccess: () -> Unit) {
@@ -21,7 +26,11 @@ fun VolunteerScreen(onSignUpSuccess: () -> Unit) {
     var nationality by remember { mutableStateOf("") }
     var phone by remember { mutableStateOf("") }
 
-    // Surface memastikan background berwarna putih/standard
+    // 1. Panggil instance Firebase
+    val context = LocalContext.current
+    val auth = Firebase.auth
+    val db = Firebase.firestore
+
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -74,7 +83,45 @@ fun VolunteerScreen(onSignUpSuccess: () -> Unit) {
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-                onClick = { onSignUpSuccess() },
+                onClick = {
+                    auth.signInAnonymously().addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            val userId = auth.currentUser?.uid
+
+                            if (userId != null) {
+                                val userDetail = hashMapOf(
+                                    "fullName" to fullName,
+                                    "nationality" to nationality,
+                                    "phone" to phone,
+                                    "role" to "volunteer"
+                                )
+
+                                db.collection("users").document(userId)
+                                    .set(userDetail)
+                                    .addOnSuccessListener {
+                                        Toast.makeText(
+                                            context,
+                                            "Data Saved Successfully!",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                        // INI PENTING: Panggil onSignUpSuccess supaya app tahu kena pindah screen
+                                        onSignUpSuccess()
+                                    }
+                                    .addOnFailureListener { e ->
+                                        Toast.makeText(
+                                            context,
+                                            "Error: ${e.message}",
+                                            Toast.LENGTH_SHORT
+                                        )
+                                            .show()
+                                    }
+                            }
+                        } else {
+                            Toast.makeText(context, "Authentication Failed!", Toast.LENGTH_SHORT)
+                                .show()
+                        }
+                    }
+                },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = RoundedCornerShape(16.dp)
             ) {
@@ -83,15 +130,4 @@ fun VolunteerScreen(onSignUpSuccess: () -> Unit) {
         }
     }
 }
-@Composable
-fun VolunteerScreen(
-    onSignUpSuccess: () -> Unit,
-    onSignUpClick: () -> Unit // <--- Tambah ni
-) {
-    // Cari butang Sign Up kau yang asal:
-    Button(
-        onClick = onSignUpClick // <--- Ganti onClick asal dengan ni
-    ) {
-        Text("Sign Up")
-    }
-}
+
