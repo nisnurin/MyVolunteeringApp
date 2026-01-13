@@ -35,10 +35,10 @@ import com.example.ict602my_vol.ui.theme.EventTest3Theme
 import com.example.ict602my_vol.ui.screens.RegisterScreen
 import com.example.ict602my_vol.ui.screens.SuccessScreen
 import com.example.ict602my_vol.ui.screens.ViewRegistrationScreen
+import com.example.ict602my_vol.ui.screens.LoginScreen
 import com.example.ict602my_vol.data.RegistrationData
-import androidx.compose.runtime.getValue // Untuk 'by remember'
-import androidx.compose.runtime.setValue // Untuk 'by remember'
-import com.example.ict602my_vol.data.Event // PENTING: Import data class Event
+import com.example.ict602my_vol.data.Event
+
 class MainActivity : ComponentActivity() {
 
     private lateinit var auth: FirebaseAuth
@@ -64,7 +64,6 @@ class MainActivity : ComponentActivity() {
                 AppRoot()
             }
         }
-
     }
 
     private fun signInWithGoogle() {
@@ -86,11 +85,23 @@ class MainActivity : ComponentActivity() {
             )
 
             "Main" -> MainScreen(
-
                 onSignUpSuccess = {
                     currentScreen = "Home"
+                },
+                onNavigateToLogin = {
+                    currentScreen = "Login"
                 }
             )
+
+            "Login" -> LoginScreen(
+                onLoginSuccess = {
+                    currentScreen = "Home"
+                },
+                onBackToSignUp = {
+                    currentScreen = "Main"
+                }
+            )
+
             "Home" -> HomePage()
         }
     }
@@ -126,7 +137,6 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-
 
     // ===================== HOME SCREEN =====================
     // ===================== HOME SCREEN =====================
@@ -184,29 +194,33 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                         }
-                        "Success" -> {
-                            SuccessScreen(
-                                eventName = registrationData.eventName,
-                                onViewRegistration = { currentSubScreen = "View" },
-                                onBackToHome = {
+                        "Success" -> SuccessScreen(
+                            eventName = registrationData?.eventName ?: "Event",
+                            onViewRegistration = {
+                                currentSubScreen = "View"
+                            },
+                            onBackToHome = {
+                                currentSubScreen = "Main"
+                                selectedTab = 0
 
-                                    selectedTab = 0
-                                    currentSubScreen = "Main"
+                                // PENTING: Tutup skrin detail kat sini juga
+                                showEventDetail = false
+                            }
+                        )
 
-                                },
-                                onBackToEvent = {
-                                    currentSubScreen = "Main"
-                                }
-                            )
-                        }
                         "View" -> {
                             ViewRegistrationScreen(
                                 data = registrationData,
                                 onBackToHome = {
+                                    // TUTUP OVERLAY
                                     currentSubScreen = "Main"
+
+                                    // RESET TAB KE HOME
                                     selectedTab = 0
-                                },
-                                onBackToEvent = { currentSubScreen = "Main" }
+
+                                    // PENTING: Tutup skrin detail supaya nampak Event List balik
+                                    showEventDetail = false
+                                }
                             )
                         }
                     }

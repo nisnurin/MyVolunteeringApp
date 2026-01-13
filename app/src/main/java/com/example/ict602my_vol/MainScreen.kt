@@ -18,7 +18,10 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 
 @Composable
-fun MainScreen(onSignUpSuccess: () -> Unit) {
+fun MainScreen(
+    onSignUpSuccess: () -> Unit,
+    onNavigateToLogin: () -> Unit // <--- TAMBAH INI SAHAJA
+) {
     val context = LocalContext.current
 
     // State untuk kontrol skrin mana nak tunjuk
@@ -27,7 +30,6 @@ fun MainScreen(onSignUpSuccess: () -> Unit) {
 
     // --- SETUP GOOGLE LOGIN ---
     val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-        // Pastikan ID ini adalah TYPE 3 dari JSON kau
         .requestIdToken("141808874586-hakgdrejt5pso4itg3vua65iks9qrfg7.apps.googleusercontent.com")
         .requestEmail()
         .build()
@@ -41,7 +43,6 @@ fun MainScreen(onSignUpSuccess: () -> Unit) {
         try {
             val account = task.getResult(ApiException::class.java)
             Log.d("GoogleSignIn", "Success: ${account?.email}")
-            // Jika berjaya login, terus ke skrin success
             onSignUpSuccess()
         } catch (e: Exception) {
             Log.e("GoogleSignIn", "Sign in failed: ${e.message}")
@@ -50,10 +51,8 @@ fun MainScreen(onSignUpSuccess: () -> Unit) {
 
     // --- LOGIC NAVIGASI ---
     if (showWelcome) {
-        // Papar WelcomeScreen mula-mula
         WelcomeScreen(onGetStarted = { showWelcome = false })
     } else {
-        // Lepas tekan Get Started, tunjuk skrin Login/Sign-up
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -93,11 +92,13 @@ fun MainScreen(onSignUpSuccess: () -> Unit) {
 
             // Papar screen ikut role
             if (selectedRole == "Volunteer") {
-                VolunteerScreen(onSignUpSuccess = onSignUpSuccess)
+                VolunteerScreen(
+                    onSignUpSuccess = onSignUpSuccess,
+                    onNavigateToLogin = onNavigateToLogin // <--- TAMBAH INI SAHAJA
+                )
             } else {
                 AdminScreen(
                     onGoogleClick = {
-                        // Fungsi panggil popup Google
                         val signInIntent = googleSignInClient.signInIntent
                         launcher.launch(signInIntent)
                     },

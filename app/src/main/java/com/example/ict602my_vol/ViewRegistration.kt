@@ -1,51 +1,120 @@
 package com.example.ict602my_vol.ui.screens
 
-import androidx.compose.foundation.*
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.*
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.ict602my_vol.data.RegistrationData
 
 @Composable
-fun ViewRegistrationScreen(data: RegistrationData, onBackToHome: () -> Unit, onBackToEvent: () -> Unit) {
-    Column(modifier = Modifier.fillMaxSize().background(Color.White), horizontalAlignment = Alignment.CenterHorizontally) {
+fun ViewRegistrationScreen(
+    data: RegistrationData,
+    onBackToHome: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // --- HEADER ---
         Spacer(modifier = Modifier.height(60.dp))
-        // Logo & Nama App
-        Text("MY VOLUNTEERING APP", fontWeight = FontWeight.Bold, color = Color(0xFF00796B), fontSize = 16.sp)
 
-        Spacer(modifier = Modifier.height(30.dp))
+        Text(
+            text = "MY VOLUNTEERING APP",
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF008080),
+            textAlign = TextAlign.Center
+        )
 
-        Surface(modifier = Modifier.fillMaxSize(), color = Color(0xFF4DB6AC), shape = RoundedCornerShape(topStart = 60.dp, topEnd = 60.dp)) {
-            Column(modifier = Modifier.padding(32.dp).verticalScroll(rememberScrollState()), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("My Registration", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                Spacer(modifier = Modifier.height(40.dp))
+        Spacer(modifier = Modifier.height(40.dp))
 
-                // Info Event
-                Text("Event Name : ${data.eventName}", color = Color.Black)
-                Text("Date : 21 December 2025", color = Color.Black)
-                Text("Time : 9:00 AM - 1:00 PM", color = Color.Black)
-                Text("Location : ${data.location}", color = Color.Black)
-                Text("Status : ${data.status}", color = Color.Black)
+        // --- CARD HIJAU TEAL ---
+        Card(
+            modifier = Modifier.fillMaxSize(),
+            shape = RoundedCornerShape(topStart = 40.dp, topEnd = 40.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF4DB6AC))
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 32.dp, vertical = 40.dp),
+                horizontalAlignment = Alignment.CenterHorizontally // SEMUA CONTENT KE TENGAH
+            ) {
+                Text(
+                    text = "My Registration",
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = Color.Black,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
 
                 Spacer(modifier = Modifier.height(30.dp))
 
-                // Info User
-                Text("Name : ${data.fullName}", color = Color.Black)
-                Text("Email : ${data.email}", color = Color.Black)
-                Text("Contact : ${data.emergencyContactNumber}", color = Color.Black)
+                // --- MAKLUMAT EVENT (CENTERED) ---
+                RegistrationDetailItem(label = "Event Name", value = data.eventName)
+                RegistrationDetailItem(label = "Date", value = "21 December 2025")
+                RegistrationDetailItem(label = "Time", value = "9:00 AM - 1:00 PM")
+                RegistrationDetailItem(label = "Location", value = data.location)
+                RegistrationDetailItem(label = "Status", value = data.status)
 
+                Spacer(modifier = Modifier.height(24.dp))
 
-                Spacer(modifier = Modifier.height(40.dp))
+                // Garis pemisah halus
+                Divider(color = Color.Black.copy(alpha = 0.1f), thickness = 1.dp)
 
+                Spacer(modifier = Modifier.height(24.dp))
 
-                Button(onClick = onBackToHome, modifier = Modifier.fillMaxWidth().height(50.dp), colors = ButtonDefaults.buttonColors(containerColor = Color.Black)) { Text("Back to Home") }
+                // --- MAKLUMAT USER (CENTERED) ---
+                RegistrationDetailItem(label = "Name", value = data.fullName)
+                RegistrationDetailItem(label = "Email", value = data.email)
+
+                // Gunakan variable yang ada dalam RegistrationData kau (emergencyContactNumber)
+                RegistrationDetailItem(label = "Contact", value = data.emergencyContactNumber)
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                // --- BUTTON BACK (CENTERED) ---
+                Button(
+                    onClick = onBackToHome,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(55.dp),
+                    shape = RoundedCornerShape(30.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Black)
+                ) {
+                    Text(
+                        text = "Back to Home",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
+                    )
+                }
             }
         }
     }
+}
+
+// Function kecil supaya kod kat atas tak serabut & maintain Center
+@Composable
+fun RegistrationDetailItem(label: String, value: String) {
+    Text(
+        text = "$label : $value",
+        fontSize = 16.sp,
+        color = Color.Black,
+        textAlign = TextAlign.Center, // Paksa text ke tengah
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+    )
 }

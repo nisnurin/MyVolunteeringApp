@@ -19,17 +19,17 @@ import androidx.compose.ui.unit.sp
 fun SuccessScreen(
     eventName: String,
     onViewRegistration: () -> Unit,
-    onBackToHome: () -> Unit,
-    onBackToEvent: () -> Unit
+    onBackToHome: () -> Unit
 ) {
     Box(
         modifier = Modifier.fillMaxSize().background(Color.White).padding(24.dp),
         contentAlignment = Alignment.Center
     ) {
         Card(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().height(550.dp),
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF4DB6AC))
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF4DB6AC)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
         ) {
             Column(
                 modifier = Modifier.padding(24.dp),
@@ -49,7 +49,8 @@ fun SuccessScreen(
                     fontSize = 26.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    lineHeight = 34.sp
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -65,7 +66,6 @@ fun SuccessScreen(
                 Spacer(modifier = Modifier.height(40.dp))
 
                 SuccessButton(text = "View My Registration", onClick = onViewRegistration)
-                SuccessButton(text = "Back to Event", onClick = onBackToEvent)
                 SuccessButton(text = "Back to Home", onClick = onBackToHome)
             }
         }
