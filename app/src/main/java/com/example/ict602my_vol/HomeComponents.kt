@@ -115,6 +115,8 @@ fun OrganizerSection(
     }
 }
 
+// Header Organization
+
 @Composable
 fun OrganizerSectionHeader(onViewAllClick: () -> Unit) {
     Row(
@@ -139,6 +141,7 @@ fun OrganizerSectionHeader(onViewAllClick: () -> Unit) {
     }
 }
 
+// list organization
 @Composable
 private fun OrganizerList(organizers: List<Organizer>) {
     LazyRow(
