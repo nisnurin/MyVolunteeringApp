@@ -39,6 +39,7 @@ import com.example.ict602my_vol.data.RegistrationData
 import androidx.compose.runtime.getValue // Untuk 'by remember'
 import androidx.compose.runtime.setValue // Untuk 'by remember'
 import com.example.ict602my_vol.data.Event // PENTING: Import data class Event
+import androidx.lifecycle.viewmodel.compose.viewModel
 class MainActivity : ComponentActivity() {
 
     private lateinit var auth: FirebaseAuth
@@ -74,13 +75,15 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     fun AppRoot() {
-        // Aliran utama: Mula dengan WelcomeScreen
+        // Initialize the ViewModel so it's shared across the admin screens
+        val manageEventViewModel: ManageEventViewModel = viewModel()
+
+        // Manage high-level navigation
         var currentScreen by remember { mutableStateOf("Welcome") }
 
         when (currentScreen) {
             "Welcome" -> WelcomeScreen(
                 onGetStarted = {
-                    // Apabila klik 'Get Started', terus ke MainScreen yang ada tab Volunteer/Admin
                     currentScreen = "Main"
                 }
             )
@@ -89,11 +92,20 @@ class MainActivity : ComponentActivity() {
                 onGoogleClick = {
                     signInWithGoogle()
                 },
-                onSignUpSuccess = {
-                    currentScreen = "Home"
+                onSignUpSuccess = TODO()
+            )
+
+            // --- ADD THIS BLOCK ---
+            "ManageEvent" -> ManageEventScreen(
+                viewModel = manageEventViewModel,
+                onBackClick = {
+                    currentScreen = "ManageEvent"
+                },
+                onAddEventClick = {
+                    // We will build this in the next step
+                    Toast.makeText(this@MainActivity, "Add Event Clicked", Toast.LENGTH_SHORT).show()
                 }
             )
-            "Home" -> HomePage()
         }
     }
 
@@ -136,7 +148,7 @@ class MainActivity : ComponentActivity() {
     fun HomePage(userViewModel: UserViewModel = viewModel()) {
         var selectedTab by remember { mutableStateOf(0) }
         var currentSubScreen by remember { mutableStateOf("Main") }
-        var registrationData by remember { mutableStateOf(com.example.ict602my_vol.data.RegistrationData()) }
+        var registrationData by remember { mutableStateOf(RegistrationData()) }
         var showEventDetail by remember { mutableStateOf(false) }
         var selectedEvent by remember { mutableStateOf<Event?>(null) }
 
@@ -172,6 +184,7 @@ class MainActivity : ComponentActivity() {
                         padding = paddingValues,
                         onNavigateToProfile = { selectedTab = 2 }
                     )
+
                 }
 
                 // --- LAYER 2: OVERLAY (Hanya muncul bila currentSubScreen bukan "Main") ---
