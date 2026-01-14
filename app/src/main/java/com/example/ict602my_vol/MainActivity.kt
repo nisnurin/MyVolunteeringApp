@@ -66,8 +66,8 @@ class MainActivity : ComponentActivity() {
     fun AppRoot() {
         val manageEventViewModel: ManageEventViewModel = viewModel()
         var currentScreen by remember { mutableStateOf("Welcome") }
-        // FIX: Gunakan VolEvent? supaya match dengan state
         var selectedEventForEdit by remember { mutableStateOf<VolEvent?>(null) }
+        var loginRole by remember { mutableStateOf("Volunteer") }
 
         when (currentScreen) {
             "Welcome" -> WelcomeScreen(onGetStarted = { currentScreen = "Main" })
@@ -75,21 +75,25 @@ class MainActivity : ComponentActivity() {
             "Main" -> MainScreen(
                 onGoogleClick = { signInWithGoogle() },
                 onSignUpSuccess = { currentScreen = "Home" },
-                onNavigateToLogin = { currentScreen = "AdminLogin" }
-            )
-            "AdminLogin" -> AdminLoginScreen(
-                onLoginSuccess = {
-                    currentScreen = "Home" // Kalau nak hantar ke Dashboard Admin, tukar "AdminDashboard"
-                },
-                onNavigateToSignUp = {
-                    currentScreen = "Main" // Patah balik ke Sign Up
+                onNavigateToLogin = { role: String ->  // Tambah : String di sini
+                    loginRole = role
+                    currentScreen = "LoginChoice"
                 }
             )
+            "LoginChoice" -> {
+                if (loginRole == "Admin") {
+                    AdminLoginScreen(
+                        onLoginSuccess = { currentScreen = "Home" },
+                        onNavigateToSignUp = { currentScreen = "Main" }
+                    )
+                } else {
+                    LoginScreen( // Ini skrin untuk Volunteer login
+                        onLoginSuccess = { currentScreen = "Home" },
+                        onBackToSignUp = { currentScreen = "Main" }
+                    )
+                }
+            }
 
-            "Login" -> LoginScreen(
-                onLoginSuccess = { currentScreen = "Home" },
-                onBackToSignUp = { currentScreen = "Main" }
-            )
 
             "Home" -> HomePage(
                 onManageClick = { currentScreen = "ManageEvent" },

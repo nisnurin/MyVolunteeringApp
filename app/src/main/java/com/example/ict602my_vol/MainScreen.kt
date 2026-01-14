@@ -21,7 +21,7 @@ import com.google.android.gms.common.api.ApiException
 @Composable
 fun MainScreen(
     onSignUpSuccess: () -> Unit,
-    onNavigateToLogin: () -> Unit,
+    onNavigateToLogin: (String) -> Unit,
     onGoogleClick: () -> Unit
 ) {
     val context = LocalContext.current
@@ -89,13 +89,13 @@ fun MainScreen(
         if (selectedRole == "Volunteer") {
             VolunteerScreen(
                 onSignUpSuccess = onSignUpSuccess,
-                onNavigateToLogin = onNavigateToLogin
+                onNavigateToLogin = { onNavigateToLogin("Volunteer") }
             )
         } else {
 
             AdminScreen(
                 onGoogleClick = onGoogleClick,
-                onNavigateToLogin = onNavigateToLogin
+                onNavigateToLogin = { onNavigateToLogin("Admin") }
             )
 
         }
