@@ -20,12 +20,13 @@ import com.google.android.gms.common.api.ApiException
 @Composable
 fun MainScreen(
     onSignUpSuccess: () -> Unit,
-    onNavigateToLogin: () -> Unit // <--- TAMBAH INI SAHAJA
+    onNavigateToLogin: () -> Unit,
+    onGoogleClick: () -> Unit // Ambil parameter ni sebab member kau mungkin guna
 ) {
     val context = LocalContext.current
 
-    // State untuk kontrol skrin mana nak tunjuk
-    var showWelcome by remember { mutableStateOf(true) }
+    // Set showWelcome kepada false secara default supaya tak berulang dengan MainActivity
+    var showWelcome by remember { mutableStateOf(false) }
     var selectedRole by remember { mutableStateOf("Volunteer") }
 
     // --- SETUP GOOGLE LOGIN ---
@@ -49,62 +50,58 @@ fun MainScreen(
         }
     }
 
-    // --- LOGIC NAVIGASI ---
-    if (showWelcome) {
-        WelcomeScreen(onGetStarted = { showWelcome = false })
-    } else {
-        Column(
+    // --- MAIN CONTENT ---
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // Tab Selector: Volunteer | Admin
+        Row(
             modifier = Modifier
-                .fillMaxSize()
-                .background(Color.White)
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
+            horizontalArrangement = Arrangement.Center
         ) {
-            // Tab Selector: Volunteer | Admin
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
-                horizontalArrangement = Arrangement.Center
+            Button(
+                onClick = { selectedRole = "Volunteer" },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (selectedRole == "Volunteer") Color(0xFF3ABABE) else Color(0xFFF0F0F0)
+                ),
+                modifier = Modifier.weight(1f).padding(end = 4.dp),
+                shape = RoundedCornerShape(16.dp)
             ) {
-                Button(
-                    onClick = { selectedRole = "Volunteer" },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (selectedRole == "Volunteer") Color(0xFF3ABABE) else Color(0xFFF0F0F0)
-                    ),
-                    modifier = Modifier.weight(1f).padding(end = 4.dp),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Text("Volunteer", color = if (selectedRole == "Volunteer") Color.White else Color.Black)
-                }
-
-                Button(
-                    onClick = { selectedRole = "Admin" },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (selectedRole == "Admin") Color(0xFF3ABABE) else Color(0xFFF0F0F0)
-                    ),
-                    modifier = Modifier.weight(1f).padding(start = 4.dp),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Text("Admin", color = if (selectedRole == "Admin") Color.White else Color.Black)
-                }
+                Text("Volunteer", color = if (selectedRole == "Volunteer") Color.White else Color.Black)
             }
 
-            // Papar screen ikut role
-            if (selectedRole == "Volunteer") {
-                VolunteerScreen(
-                    onSignUpSuccess = onSignUpSuccess,
-                    onNavigateToLogin = onNavigateToLogin // <--- TAMBAH INI SAHAJA
-                )
-            } else {
-                AdminScreen(
-                    onGoogleClick = {
-                        val signInIntent = googleSignInClient.signInIntent
-                        launcher.launch(signInIntent)
-                    },
-                    onContinueSuccess = onSignUpSuccess
-                )
+            Button(
+                onClick = { selectedRole = "Admin" },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (selectedRole == "Admin") Color(0xFF3ABABE) else Color(0xFFF0F0F0)
+                ),
+                modifier = Modifier.weight(1f).padding(start = 4.dp),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Text("Admin", color = if (selectedRole == "Admin") Color.White else Color.Black)
             }
+        }
+
+        // Papar screen ikut role
+        if (selectedRole == "Volunteer") {
+            VolunteerScreen(
+                onSignUpSuccess = onSignUpSuccess,
+                onNavigateToLogin = onNavigateToLogin
+            )
+        } else {
+            AdminScreen(
+                onGoogleClick = {
+                    val signInIntent = googleSignInClient.signInIntent
+                    launcher.launch(signInIntent)
+                },
+                onContinueSuccess = onSignUpSuccess
+            )
         }
     }
 }

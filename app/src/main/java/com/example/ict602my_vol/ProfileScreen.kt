@@ -3,7 +3,6 @@ package com.example.ict602my_vol
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -18,19 +17,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.ict602my_vol.ui.theme.BrandBlue
-import com.example.ict602my_vol.ui.theme.DarkBadge // Make sure this is imported
+import com.example.ict602my_vol.ui.theme.DarkBadge
 
 @Composable
 fun ProfileScreen(
     padding: PaddingValues,
     userViewModel: UserViewModel,
-    onNavigateToActivities: () -> Unit // This is the trigger
+    onNavigateToActivities: () -> Unit,
+    onLogout: () -> Unit
 ) {
     // On this page, selectedIndex is always 0 (Profile)
     val selectedIndex = 0
@@ -48,10 +47,28 @@ fun ProfileScreen(
             .background(Color.White),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // --- TOP BAR WITH LOGOUT ---
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+        ) {
+            IconButton(
+                onClick = onLogout,
+                modifier = Modifier.align(Alignment.CenterEnd)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.ExitToApp,
+                    contentDescription = "Logout",
+                    tint = Color.Red
+                )
+            }
+        }
+
         // --- 1. THE BEAUTY TOGGLE ---
         Row(
             modifier = Modifier
-                .padding(horizontal = 24.dp, vertical = 16.dp)
+                .padding(horizontal = 24.dp, vertical = 8.dp)
                 .fillMaxWidth()
                 .height(50.dp)
                 .clip(CircleShape)
@@ -126,12 +143,12 @@ fun ProfileScreen(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.Email, null, modifier = Modifier.size(16.dp), tint = Color.Gray)
                 Spacer(Modifier.width(8.dp))
-                Text(text = "Ali123abu@gmail.com", color = Color.Gray)
+                Text(text = userViewModel.userEmail, color = Color.Gray)
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.LocationOn, null, modifier = Modifier.size(16.dp), tint = Color.Gray)
                 Spacer(Modifier.width(8.dp))
-                Text(text = "Kuala Terengganu", color = Color.Gray)
+                Text(text = userViewModel.userNationality, color = Color.Gray)
             }
         }
 
@@ -151,9 +168,8 @@ fun ProfileScreen(
                         .padding(20.dp),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
-                    StatItem(count = "1", label = "Group")
-                    StatItem(count = "12", label = "Events")
-                    StatItem(count = "8", label = "Rewards")
+                    StatItem(count = "2", label = "Registered Event")
+                    StatItem(count = "8", label = "Available Event")
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
