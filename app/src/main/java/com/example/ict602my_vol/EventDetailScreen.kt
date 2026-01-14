@@ -33,7 +33,7 @@ import com.example.ict602my_vol.data.Event
 
 
 // ===================== CUSTOM COLORS =====================
-// #3ABABE
+// #3ABABE 
 val PrimaryBackground = Color(0xFF3ABABE)
 val DarkBackground = Color(0xFF267D7D)
 
@@ -267,6 +267,7 @@ fun RegisterButton(onClick: () -> Unit) {
 }
 
 // ===================== 3. FUNCTION =====================
+
 
 fun addEventToCalendar(context: Context, title: String, dateString: String, location: String) {
 

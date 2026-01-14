@@ -18,10 +18,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 
 @Composable
-fun MainScreen(
-    onSignUpSuccess: () -> Unit,
-    onGoogleClick: () -> Unit
-) {
+fun MainScreen(onSignUpSuccess: () -> Unit) {
     val context = LocalContext.current
 
     // State untuk kontrol skrin mana nak tunjuk

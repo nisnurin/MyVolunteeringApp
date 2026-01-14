@@ -15,8 +15,8 @@ data class RegistrationData(
     val emergencyContactName: String = "",
     val emergencyContactRelationship: String = "",
     val emergencyContactNumber: String = "",
-    val email: String = "Ali123abu@gmail.com", // Default email user
-    val eventName: String = "Volunteer Charity Drive 2026",
-    val location: String = "Kuala Lumpur",
-    val status: String = "Confirmed"
+    val email: String = "", // Biar kosong, nanti kita isi masa register
+    val eventName: String = "",
+    val location: String = "",
+    val status: String = "Pending" // Biasanya status mula-mula adalah Pending
 )

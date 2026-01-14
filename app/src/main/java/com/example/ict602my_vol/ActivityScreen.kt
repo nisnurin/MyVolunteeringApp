@@ -149,4 +149,5 @@ fun ActivityCard(event: Event) {
             }
         }
     }
+
 }
