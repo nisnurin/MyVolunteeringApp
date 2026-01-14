@@ -10,9 +10,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ict602my_vol.data.RegistrationData
 import com.example.ict602my_vol.ui.BottomNavigationBar
@@ -25,6 +26,8 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
+import com.example.ict602my_vol.data.Event as VolEvent
+import com.example.ict602my_vol.ui.screens.MainScreen
 
 class MainActivity : ComponentActivity() {
 
@@ -46,7 +49,9 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             EventTest3Theme {
-                AppRoot()
+                Surface(modifier = Modifier.fillMaxSize(), color = Color.White) {
+                    AppRoot()
+                }
             }
         }
     }
@@ -60,34 +65,44 @@ class MainActivity : ComponentActivity() {
     fun AppRoot() {
         val manageEventViewModel: ManageEventViewModel = viewModel()
         var currentScreen by remember { mutableStateOf("Welcome") }
+        // FIX: Gunakan VolEvent? supaya match dengan state
         var selectedEventForEdit by remember { mutableStateOf<VolEvent?>(null) }
 
-        // MAIN NAVIGATION LOGIC
         when (currentScreen) {
             "Welcome" -> WelcomeScreen(onGetStarted = { currentScreen = "Main" })
 
             "Main" -> MainScreen(
                 onGoogleClick = { signInWithGoogle() },
-                onSignUpSuccess = { currentScreen = "Home" }
+                onSignUpSuccess = { currentScreen = "Home" },
+                onNavigateToLogin = { currentScreen = "Login" }
+            )
+
+            "Login" -> LoginScreen(
+                onLoginSuccess = { currentScreen = "Home" },
+                onBackToSignUp = { currentScreen = "Main" }
             )
 
             "Home" -> HomePage(
-                onManageClick = { currentScreen = "ManageEvent" }
+                onManageClick = { currentScreen = "ManageEvent" },
+                onLogout = {
+                    auth.signOut()
+                    googleSignInClient.signOut()
+                    currentScreen = "Welcome"
+                }
             )
 
             "ManageEvent" -> ManageEventScreen(
                 viewModel = manageEventViewModel,
                 onBackClick = { currentScreen = "Home" },
                 onAddEventClick = {
-                    selectedEventForEdit = null // Fresh form
+                    selectedEventForEdit = null
                     currentScreen = "AddEvent"
                 },
-                onEditEventClick = { event ->
-                    selectedEventForEdit = event // Edit existing
+                onEditEventClick = { event ->  // Guna 'it' atau tukar nama kat sini
+                    selectedEventForEdit = event as VolEvent
                     currentScreen = "AddEvent"
                 }
             )
-
             "AddEvent" -> AddEventScreen(
                 onNavigateBack = { currentScreen = "ManageEvent" },
                 eventToEdit = selectedEventForEdit
@@ -98,38 +113,43 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun HomePage(
         onManageClick: () -> Unit,
+        onLogout: () -> Unit,
         userViewModel: UserViewModel = viewModel()
     ) {
         var selectedTab by remember { mutableStateOf(0) }
         var currentSubScreen by remember { mutableStateOf("Main") }
         var registrationData by remember { mutableStateOf(RegistrationData()) }
 
-        Scaffold(
-            bottomBar = {
-                if (currentSubScreen == "Main") {
-                    BottomNavigationBar(
-                        selected = selectedTab,
-                        onSelect = { selectedTab = it }
-                    )
+        Box(modifier = Modifier.fillMaxSize()) {
+            Scaffold(
+                bottomBar = {
+                    if (currentSubScreen == "Main") {
+                        BottomNavigationBar(
+                            selected = selectedTab,
+                            onSelect = { selectedTab = it }
+                        )
+                    }
+                }
+            ) { innerPadding ->
+                Box(modifier = Modifier.padding(innerPadding)) {
+                    when (selectedTab) {
+                        0 -> HomeScreen(paddingValues = innerPadding, onRegisterClick = { currentSubScreen = "Register" })
+                        1 -> NotificationScreen(innerPadding, userViewModel)
+                        2 -> ProfileScreen(
+                            padding = innerPadding,
+                            userViewModel = userViewModel,
+                            onNavigateToActivities = { selectedTab = 3 },
+                            onManageEventsClick = onManageClick,
+                            onLogout = onLogout
+                        )
+                        3 -> ActivityScreen(padding = innerPadding, onNavigateToProfile = { selectedTab = 2 })
+                    }
                 }
             }
-        ) { paddingValues ->
-            Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
-                // TAB NAVIGATION
-                when (selectedTab) {
-                    0 -> HomeScreen(paddingValues = paddingValues, onRegisterClick = { currentSubScreen = "Register" })
-                    1 -> NotificationScreen(paddingValues, userViewModel)
-                    2 -> ProfileScreen(
-                        padding = paddingValues,
-                        userViewModel = userViewModel,
-                        onNavigateToActivities = { selectedTab = 3 },
-                        onManageEventsClick = onManageClick // Link to Admin page
-                    )
-                    3 -> ActivityScreen(padding = paddingValues, onNavigateToProfile = { selectedTab = 2 })
-                }
 
-                // OVERLAYS (Register/Success)
-                if (currentSubScreen != "Main") {
+            // Overlay Skrin Pendaftaran (Tutup Benda Putih)
+            if (currentSubScreen != "Main") {
+                Surface(modifier = Modifier.fillMaxSize(), color = Color.White) {
                     when (currentSubScreen) {
                         "Register" -> RegisterScreen(
                             onBack = { currentSubScreen = "Main" },
@@ -159,7 +179,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    // HANDLES GOOGLE LOGIN RESULT
     @Deprecated("Deprecated in Java")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)

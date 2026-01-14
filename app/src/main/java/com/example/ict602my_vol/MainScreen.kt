@@ -13,11 +13,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.example.ict602my_vol.AdminScreen
-import com.example.ict602my_vol.VolunteerScreen
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
+
 
 @Composable
 fun MainScreen(
@@ -28,7 +27,7 @@ fun MainScreen(
     val context = LocalContext.current
     var selectedRole by remember { mutableStateOf("Volunteer") }
 
-    // --- SETUP GOOGLE LOGIN ---
+    // --- SETUP GOOGLE LOGIN (Kekal Sama) ---
     val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
         .requestEmail()
         .build()
@@ -93,12 +92,11 @@ fun MainScreen(
                 onNavigateToLogin = onNavigateToLogin
             )
         } else {
+
             AdminScreen(
                 onGoogleClick = onGoogleClick,
-                onContinueClick = {
-                    selectedRole = "Volunteer"
-                }
             )
+
         }
     }
 }

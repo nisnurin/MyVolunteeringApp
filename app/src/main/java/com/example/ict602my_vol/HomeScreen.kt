@@ -90,7 +90,7 @@ fun HomeScreen(paddingValues: PaddingValues,
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.White)
+                    .background(Color(0xFF36B8B1))
             ) {
 
                 // Home Interface

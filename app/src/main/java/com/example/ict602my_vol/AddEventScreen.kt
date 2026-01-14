@@ -13,7 +13,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import com.example.ict602my_vol.VolEvent
+// TUKAR LINE NI: Pastikan import dari .data.Event
+import com.example.ict602my_vol.data.Event as VolEvent
 import com.google.firebase.firestore.FirebaseFirestore
 
 @Composable

@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.dp
 // ===================== BOTTOM NAVIGATION =====================
 @Composable
 fun BottomNavigationBar(selected: Int, onSelect: (Int) -> Unit) {
-    NavigationBar(containerColor = Color.White) {
+    NavigationBar(containerColor = Color.White,) {
         NavigationBarItem(
             selected = selected == 0,
             onClick = { onSelect(0) },

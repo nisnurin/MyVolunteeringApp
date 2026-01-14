@@ -1,5 +1,6 @@
 package com.example.ict602my_vol
 
+import com.example.ict602my_vol.data.Event as VolEvent
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -74,7 +75,7 @@ fun ManageEventScreen(
         )
 
         LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.fillMaxSize()) {
-            items(viewModel.filteredEvents) { event ->
+            items(viewModel.filteredEvents) { event: VolEvent ->
                 EventCard(event = event, onClick = {
                     selectedEvent = event
                     showDialog = true
@@ -114,7 +115,9 @@ fun ManageEventScreen(
 }
 
 @Composable
-fun EventCard(event: VolEvent, onClick: () -> Unit) {
+fun EventCard(
+    event: VolEvent,
+    onClick: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth().clickable { onClick() },
         shape = RoundedCornerShape(12.dp),

@@ -6,6 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.google.firebase.firestore.FirebaseFirestore
+import com.example.ict602my_vol.data.Event as VolEvent
 
 // 1. Updated Data Structure - id MUST be String for Firebase Auto-IDs
 data class VolEvent(
@@ -13,7 +14,8 @@ data class VolEvent(
     val name: String = "",
     val organizer: String = "",
     val date: String = "",
-    val location: String = ""
+    val location: String = "",
+    val imageResId: Int = 0
 )
 
 class ManageEventViewModel : ViewModel() {
