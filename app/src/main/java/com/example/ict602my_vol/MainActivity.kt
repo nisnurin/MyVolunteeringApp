@@ -68,11 +68,22 @@ class MainActivity : ComponentActivity() {
 
             "Main" -> MainScreen(
                 onGoogleClick = { signInWithGoogle() },
-                onSignUpSuccess = { currentScreen = "Home" }
+                onSignUpSuccess = { currentScreen = "Home" },
+                onNavigateToLogin = { currentScreen = "Login" }
+            )
+
+            "Login" -> LoginScreen(
+                onLoginSuccess = { currentScreen = "Home" },
+                onBackToSignUp = { currentScreen = "Main" }
             )
 
             "Home" -> HomePage(
-                onManageClick = { currentScreen = "ManageEvent" }
+                onManageClick = { currentScreen = "ManageEvent" },
+                onLogout = {
+                    auth.signOut()
+                    googleSignInClient.signOut()
+                    currentScreen = "Welcome"
+                }
             )
 
             "ManageEvent" -> ManageEventScreen(
@@ -98,6 +109,7 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun HomePage(
         onManageClick: () -> Unit,
+        onLogout: () -> Unit,
         userViewModel: UserViewModel = viewModel()
     ) {
         var selectedTab by remember { mutableStateOf(0) }
@@ -123,7 +135,8 @@ class MainActivity : ComponentActivity() {
                         padding = paddingValues,
                         userViewModel = userViewModel,
                         onNavigateToActivities = { selectedTab = 3 },
-                        onManageEventsClick = onManageClick // Link to Admin page
+                        onManageEventsClick = onManageClick, // Link to Admin page
+                        onLogout = onLogout
                     )
                     3 -> ActivityScreen(padding = paddingValues, onNavigateToProfile = { selectedTab = 2 })
                 }

@@ -40,7 +40,6 @@ fun ActivityScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(padding)
             .background(BrandBlue), // Matching your BrandBlue background
         horizontalAlignment = Alignment.CenterHorizontally
     ) {

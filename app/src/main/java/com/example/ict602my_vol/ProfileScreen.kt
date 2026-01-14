@@ -24,6 +24,9 @@ import coil.compose.AsyncImage
 import com.example.ict602my_vol.ui.theme.BrandBlue
 import com.example.ict602my_vol.ui.theme.DarkBadge
 
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+
 @Composable
 fun ProfileScreen(
     padding: PaddingValues,
@@ -34,6 +37,7 @@ fun ProfileScreen(
 ) {
     // On this page, selectedIndex is always 0 (Profile)
     val selectedIndex = 0
+    val scrollState = rememberScrollState()
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -44,32 +48,14 @@ fun ProfileScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(padding)
+            .verticalScroll(scrollState)
             .background(Color.White),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // --- TOP BAR WITH LOGOUT ---
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp)
-        ) {
-            IconButton(
-                onClick = onLogout,
-                modifier = Modifier.align(Alignment.CenterEnd)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.ExitToApp,
-                    contentDescription = "Logout",
-                    tint = Color.Red
-                )
-            }
-        }
-
         // --- 1. THE BEAUTY TOGGLE ---
         Row(
             modifier = Modifier
-                .padding(horizontal = 24.dp, vertical = 8.dp)
+                .padding(horizontal = 24.dp, vertical = 16.dp)
                 .fillMaxWidth()
                 .height(50.dp)
                 .clip(CircleShape)
@@ -99,6 +85,24 @@ fun ProfileScreen(
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                     )
                 }
+            }
+        }
+
+        // --- 2. TOP BAR WITH LOGOUT ---
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+        ) {
+            IconButton(
+                onClick = onLogout,
+                modifier = Modifier.align(Alignment.CenterEnd)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.ExitToApp,
+                    contentDescription = "Logout",
+                    tint = Color.Red
+                )
             }
         }
 
@@ -156,7 +160,9 @@ fun ProfileScreen(
         // --- 5. BOTTOM SECTION ---
         Box(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
+                .weight(1f, fill = false) // Allow it to wrap content or expand if needed
+                .heightIn(min = 300.dp)   // Ensure it has a minimum height to fill the bottom
                 .clip(RoundedCornerShape(topStart = 35.dp, topEnd = 35.dp))
                 .background(BrandBlue)
         ) {
