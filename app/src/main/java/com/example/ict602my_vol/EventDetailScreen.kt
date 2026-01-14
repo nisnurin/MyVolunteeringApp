@@ -268,7 +268,6 @@ fun RegisterButton(onClick: () -> Unit) {
 
 // ===================== 3. FUNCTION =====================
 
-
 fun addEventToCalendar(context: Context, title: String, dateString: String, location: String) {
 
 
