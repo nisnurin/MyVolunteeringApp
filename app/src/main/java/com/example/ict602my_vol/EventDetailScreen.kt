@@ -86,12 +86,6 @@ fun EventDetailsScreen(
             )
         },
 
-        bottomBar = {
-            // bottomBar for Register button
-            Column(modifier = Modifier.background(PrimaryBackground).padding(bottom = 10.dp)) {
-                RegisterButton(onClick = onRegisterClick)
-            }
-        }
     ) { padding ->
         // 3. LazyColumn for about
         LazyColumn(
@@ -120,7 +114,13 @@ fun EventDetailsScreen(
                     OrganizerSectionDetails(eventDetails)
 
                     AboutSection()
-
+                    Spacer(Modifier.height(24.dp))
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        RegisterButton(onClick = onRegisterClick)
+                    }
                     // Padding bawah LazyColumn supaya butang di BottomBar tidak bertindih dengan teks
                     Spacer(Modifier.height(50.dp))
                 }
