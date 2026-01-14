@@ -10,6 +10,7 @@ activityCompose = "1.12.2"
 composeBom = "2024.09.00"
 firebaseAuthKtx = "24.0.1"
 firebaseAuthCommon = "9.8.0"
+coil = "2.7.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -28,9 +29,9 @@ androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-te
 androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
 firebase-auth-ktx = { group = "com.google.firebase", name = "firebase-auth-ktx", version.ref = "firebaseAuthKtx" }
 firebase-auth-common = { group = "com.google.firebase", name = "firebase-auth-common", version.ref = "firebaseAuthCommon" }
+coil = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
-

@@ -13,8 +13,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.example.ict602my_vol.AdminScreen
-import com.example.ict602my_vol.VolunteerScreen
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
@@ -95,9 +93,7 @@ fun MainScreen(
         } else {
             AdminScreen(
                 onGoogleClick = onGoogleClick,
-                onContinueClick = {
-                    selectedRole = "Volunteer"
-                }
+                onContinueSuccess = onSignUpSuccess
             )
         }
     }

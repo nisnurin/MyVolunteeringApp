@@ -29,7 +29,8 @@ fun ProfileScreen(
     padding: PaddingValues,
     userViewModel: UserViewModel,
     onNavigateToActivities: () -> Unit,
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    onManageEventsClick: () -> Unit
 ) {
     // On this page, selectedIndex is always 0 (Profile)
     val selectedIndex = 0
