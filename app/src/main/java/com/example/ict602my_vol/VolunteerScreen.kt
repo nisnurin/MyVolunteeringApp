@@ -145,7 +145,7 @@ fun VolunteerScreen(
                 },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF8E5993))
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6650a4))
             ) {
                 Text("Sign Up", fontWeight = FontWeight.Bold)
             }
@@ -156,7 +156,7 @@ fun VolunteerScreen(
                 onClick = onNavigateToLogin,
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF8E5993))
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6650a4))
             ) {
                 Text("Log In to Existing Account", fontWeight = FontWeight.Bold)
             }

@@ -28,6 +28,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.example.ict602my_vol.data.Event as VolEvent
 import com.example.ict602my_vol.ui.screens.MainScreen
+import com.example.ict602my_vol.ui.screens.AdminLoginScreen
 
 class MainActivity : ComponentActivity() {
 
@@ -74,7 +75,15 @@ class MainActivity : ComponentActivity() {
             "Main" -> MainScreen(
                 onGoogleClick = { signInWithGoogle() },
                 onSignUpSuccess = { currentScreen = "Home" },
-                onNavigateToLogin = { currentScreen = "Login" }
+                onNavigateToLogin = { currentScreen = "AdminLogin" }
+            )
+            "AdminLogin" -> AdminLoginScreen(
+                onLoginSuccess = {
+                    currentScreen = "Home" // Kalau nak hantar ke Dashboard Admin, tukar "AdminDashboard"
+                },
+                onNavigateToSignUp = {
+                    currentScreen = "Main" // Patah balik ke Sign Up
+                }
             )
 
             "Login" -> LoginScreen(
@@ -121,6 +130,7 @@ class MainActivity : ComponentActivity() {
         var registrationData by remember { mutableStateOf(RegistrationData()) }
 
         Box(modifier = Modifier.fillMaxSize()) {
+
             Scaffold(
                 bottomBar = {
                     if (currentSubScreen == "Main") {
@@ -131,7 +141,7 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             ) { innerPadding ->
-                Box(modifier = Modifier.padding(innerPadding)) {
+                Box(modifier = Modifier) {
                     when (selectedTab) {
                         0 -> HomeScreen(paddingValues = innerPadding, onRegisterClick = { currentSubScreen = "Register" })
                         1 -> NotificationScreen(innerPadding, userViewModel)

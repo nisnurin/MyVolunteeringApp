@@ -95,6 +95,7 @@ fun MainScreen(
 
             AdminScreen(
                 onGoogleClick = onGoogleClick,
+                onNavigateToLogin = onNavigateToLogin
             )
 
         }

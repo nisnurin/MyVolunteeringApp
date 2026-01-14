@@ -75,7 +75,7 @@ fun HomeScreen(paddingValues: PaddingValues,
     NavHost(
         navController = homeNavController,
         startDestination = "event_list_screen",
-        modifier = Modifier.padding(paddingValues) // Padding Bottom Bar
+        modifier = Modifier.fillMaxSize()// Padding Bottom Bar
     ) {
 
         // --- ROUTE 1: EVENT LIST SCREEN ---
@@ -90,7 +90,8 @@ fun HomeScreen(paddingValues: PaddingValues,
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color(0xFF36B8B1))
+                    .background(Color.White),
+                        contentPadding = paddingValues
             ) {
 
                 // Home Interface
