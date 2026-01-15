@@ -27,9 +27,9 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
+
+// /// ALIAS FOR THE EVENT DATA CLASS TO AVOID CONFLICTS ///
 import com.example.ict602my_vol.data.Event as VolEvent
-import com.example.ict602my_vol.ui.screens.MainScreen
-import com.example.ict602my_vol.ui.screens.AdminLoginScreen
 
 class MainActivity : ComponentActivity() {
 
@@ -66,27 +66,29 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun AppRoot() {
         val manageEventViewModel: ManageEventViewModel = viewModel()
-        // For testing, you can change "Welcome" to "AdminDashboard" to see it immediately
         var currentScreen by remember { mutableStateOf("Welcome") }
         var selectedEventForEdit by remember { mutableStateOf<VolEvent?>(null) }
         var loginRole by remember { mutableStateOf("Volunteer") }
 
         when (currentScreen) {
             "Welcome" -> WelcomeScreen(onGetStarted = { currentScreen = "Main" })
-
             "Main" -> MainScreen(
-                onGoogleClick = { signInWithGoogle() },
                 onSignUpSuccess = { currentScreen = "Home" },
-                onNavigateToLogin = { role: String ->
-                    loginRole = role
+                onNavigateToLogin = {
                     currentScreen = "LoginChoice"
-                }
+                },
+                onGoogleClick = { signInWithGoogle() }
+            )
+            "Login" -> LoginScreen(
+                onLoginSuccess = { currentScreen = "Home" },
+                onBackToSignUp = { currentScreen = "Main" }
             )
 
             "LoginChoice" -> {
+                // Here you might want a screen to choose Admin or Volunteer login,
+                // but based on your logic, we'll check loginRole.
                 if (loginRole == "Admin") {
                     AdminLoginScreen(
-                        // UPDATED: Navigate to AdminDashboard instead of Home
                         onLoginSuccess = { currentScreen = "AdminDashboard" },
                         onNavigateToSignUp = { currentScreen = "Main" }
                     )
@@ -98,7 +100,6 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            // NEW: Admin Dashboard Route
             "AdminDashboard" -> AdminDashboardScreen(
                 onManageEventClick = { currentScreen = "ManageEvent" },
                 onViewReportClick = {
@@ -117,11 +118,9 @@ class MainActivity : ComponentActivity() {
                     currentScreen = "Welcome"
                 }
             )
-
             "ManageEvent" -> ManageEventScreen(
                 viewModel = manageEventViewModel,
                 onBackClick = {
-                    // UPDATED: Logic to return to the correct dashboard based on role
                     if (loginRole == "Admin") currentScreen = "AdminDashboard"
                     else currentScreen = "Home"
                 },
@@ -130,7 +129,7 @@ class MainActivity : ComponentActivity() {
                     currentScreen = "AddEvent"
                 },
                 onEditEventClick = { event ->
-                    selectedEventForEdit = event as VolEvent
+                    selectedEventForEdit = event as? VolEvent
                     currentScreen = "AddEvent"
                 }
             )
@@ -151,22 +150,28 @@ class MainActivity : ComponentActivity() {
         var selectedTab by remember { mutableStateOf(0) }
         var currentSubScreen by remember { mutableStateOf("Main") }
         var registrationData by remember { mutableStateOf(RegistrationData()) }
+        var selectedEventForRegistration by remember { mutableStateOf<VolEvent?>(null) }
+        var resetHome by remember { mutableStateOf(false) }
 
         Box(modifier = Modifier.fillMaxSize()) {
-
             Scaffold(
                 bottomBar = {
                     if (currentSubScreen == "Main") {
-                        BottomNavigationBar(
-                            selected = selectedTab,
-                            onSelect = { selectedTab = it }
-                        )
+                        BottomNavigationBar(selected = selectedTab, onSelect = { selectedTab = it })
                     }
                 }
             ) { innerPadding ->
-                Box(modifier = Modifier) {
+                Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
                     when (selectedTab) {
-                        0 -> HomeScreen(paddingValues = innerPadding, onRegisterClick = { currentSubScreen = "Register" })
+                        0 -> HomeScreen(
+                            paddingValues = innerPadding,
+                            onRegisterClick = { event ->
+                                selectedEventForRegistration = event
+                                currentSubScreen = "Register"
+                            },
+                            shouldReset = resetHome,
+                            onResetComplete = { resetHome = false }
+                        )
                         1 -> NotificationScreen(innerPadding, userViewModel)
                         2 -> ProfileScreen(
                             padding = innerPadding,
@@ -180,23 +185,32 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            // Overlay Skrin Pendaftaran (Tutup Benda Putih)
             if (currentSubScreen != "Main") {
                 Surface(modifier = Modifier.fillMaxSize(), color = Color.White) {
                     when (currentSubScreen) {
-                        "Register" -> RegisterScreen(
-                            onBack = { currentSubScreen = "Main" },
-                            onRegisterSuccess = { data ->
-                                registrationData = data
-                                currentSubScreen = "Success"
+                        "Register" -> {
+                            selectedEventForRegistration?.let { event ->
+                                RegisterScreen(
+                                    event = event,
+                                    onBack = {
+                                        currentSubScreen = "Main"
+                                        selectedEventForRegistration = null
+                                    },
+                                    onRegisterSuccess = { data ->
+                                        registrationData = data
+                                        currentSubScreen = "Success"
+                                    }
+                                )
                             }
-                        )
+                        }
                         "Success" -> SuccessScreen(
                             eventName = registrationData.eventName,
                             onViewRegistration = { currentSubScreen = "View" },
                             onBackToHome = {
+                                resetHome = true
                                 selectedTab = 0
                                 currentSubScreen = "Main"
+                                selectedEventForRegistration = null
                             }
                         )
                         "View" -> ViewRegistrationScreen(
@@ -204,6 +218,7 @@ class MainActivity : ComponentActivity() {
                             onBackToHome = {
                                 currentSubScreen = "Main"
                                 selectedTab = 0
+                                selectedEventForRegistration = null
                             }
                         )
                     }
@@ -234,7 +249,6 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AdminFlowPreview() {
     EventTest3Theme {
-        // This simulates how the app looks when on the Admin Dashboard
         AdminDashboardScreen(
             onManageEventClick = {},
             onViewReportClick = {},
@@ -242,4 +256,3 @@ fun AdminFlowPreview() {
         )
     }
 }
-

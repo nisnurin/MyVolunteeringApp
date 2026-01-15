@@ -23,7 +23,10 @@ import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RegisterScreen(onBack: () -> Unit, onRegisterSuccess: (RegistrationData) -> Unit) {
+fun RegisterScreen(
+    event: com.example.ict602my_vol.data.Event,
+    onBack: () -> Unit,
+    onRegisterSuccess: (RegistrationData) -> Unit) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
     val auth = FirebaseAuth.getInstance()
@@ -152,66 +155,68 @@ fun RegisterScreen(onBack: () -> Unit, onRegisterSuccess: (RegistrationData) -> 
 
             Button(
                 onClick = {
-                    if (email.isEmpty() || password.isEmpty() || fullName.isEmpty()) {
-                        Toast.makeText(context, "Email, Password & Name are required!", Toast.LENGTH_SHORT).show()
-                    } else if (password.length < 6) {
-                        Toast.makeText(context, "Password must be at least 6 characters", Toast.LENGTH_SHORT).show()
+                    // 1. Input Validation: Check if required fields are filled
+                    if (fullName.isEmpty() || address.isEmpty() || emergencyPhone.isEmpty()) {
+                        Toast.makeText(context, "Please fill in all required personal details!", Toast.LENGTH_SHORT).show()
                     } else {
                         isLoading = true
-                        auth.createUserWithEmailAndPassword(email, password)
-                            .addOnCompleteListener { task ->
-                                if (task.isSuccessful) {
-                                    val userId = auth.currentUser?.uid
-                                    val userProfile = hashMapOf(
-                                        "email" to email,
-                                        "fullName" to fullName,
-                                        "nric" to nric,
-                                        "dob" to dob,
-                                        "gender" to gender,
-                                        "bloodType" to bloodType,
-                                        "address" to address,
-                                        "city" to city,
-                                        "state" to state,
-                                        "emergencyContactName" to emergencyName,
-                                        "emergencyContactPhone" to emergencyPhone,
-                                        "role" to "volunteer"
-                                    )
 
-                                    if (userId != null) {
-                                        db.collection("events").document(userId)
-                                            .set(userProfile)
-                                            .addOnSuccessListener {
-                                                isLoading = false
-                                                Toast.makeText(context, "Registration Success!", Toast.LENGTH_SHORT).show()
-                                                onRegisterSuccess(RegistrationData(
-                                                    fullName = fullName,
-                                                    nationality = nationality,
-                                                    nric = nric,
-                                                    dob = dob,
-                                                    gender = gender,
-                                                    address = address,
-                                                    postCode = postCode,
-                                                    city = city,
-                                                    state = state,
-                                                    residentialCountry = residentialCountry,
-                                                    bloodType = bloodType,
-                                                    emergencyContactName = emergencyName,
-                                                    emergencyContactRelationship = emergencyRel,
-                                                    emergencyContactNumber = emergencyPhone,
-                                                    email = email,
-                                                    status = "Pending"
-                                                ))
-                                            }
-                                            .addOnFailureListener {
-                                                isLoading = false
-                                                Toast.makeText(context, "Firestore Error: ${it.message}", Toast.LENGTH_LONG).show()
-                                            }
-                                    }
-                                } else {
+                        // 2. Get the currently logged-in User ID
+                        val userId = auth.currentUser?.uid
+
+                        if (userId != null) {
+                            // 3. Prepare data for Firestore
+                            val userProfile = hashMapOf(
+                                "email" to (auth.currentUser?.email ?: email), // Use existing login email
+                                "fullName" to fullName,
+                                "nric" to nric,
+                                "dob" to dob,
+                                "gender" to gender,
+                                "bloodType" to bloodType,
+                                "address" to address,
+                                "city" to city,
+                                "state" to state,
+                                "emergencyContactName" to emergencyName,
+                                "emergencyContactPhone" to emergencyPhone,
+                                "role" to "volunteer"
+                            )
+
+                            // 4. Save directly to Firestore collection "volunteers"
+                            db.collection("volunteers").document(userId)
+                                .set(userProfile)
+                                .addOnSuccessListener {
                                     isLoading = false
-                                    Toast.makeText(context, "Auth Error: ${task.exception?.message}", Toast.LENGTH_LONG).show()
+                                    Toast.makeText(context, "Registration Successful!", Toast.LENGTH_SHORT).show()
+
+                                    onRegisterSuccess(RegistrationData(
+                                        fullName = fullName,
+                                        nationality = nationality,
+                                        nric = nric,
+                                        dob = dob,
+                                        gender = gender,
+                                        address = address,
+                                        postCode = postCode,
+                                        city = city,
+                                        state = state,
+                                        residentialCountry = residentialCountry,
+                                        bloodType = bloodType,
+                                        emergencyContactName = emergencyName,
+                                        emergencyContactRelationship = emergencyRel,
+                                        emergencyContactNumber = emergencyPhone,
+                                        email = auth.currentUser?.email ?: email,
+                                        eventName = event.name,
+                                        location = event.location,
+                                        status = "Pending"
+                                    ))
                                 }
-                            }
+                                .addOnFailureListener { e ->
+                                    isLoading = false
+                                    Toast.makeText(context, "Save Failed: ${e.message}", Toast.LENGTH_LONG).show()
+                                }
+                        } else {
+                            isLoading = false
+                            Toast.makeText(context, "Please log in first!", Toast.LENGTH_SHORT).show()
+                        }
                     }
                 },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
@@ -219,8 +224,11 @@ fun RegisterScreen(onBack: () -> Unit, onRegisterSuccess: (RegistrationData) -> 
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
                 enabled = !isLoading
             ) {
-                if (isLoading) CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
-                else Text("Register", color = Color.White, fontWeight = FontWeight.Bold)
+                if (isLoading) {
+                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                } else {
+                    Text("Register", color = Color.White, fontWeight = FontWeight.Bold)
+                }
             }
             Spacer(modifier = Modifier.height(60.dp))
         }
