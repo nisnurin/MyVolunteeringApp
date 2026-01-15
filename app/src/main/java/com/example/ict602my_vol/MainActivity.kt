@@ -171,7 +171,10 @@ class MainActivity : ComponentActivity() {
                             selectedEventForRegistration?.let { event ->
                                 RegisterScreen(
                                     event = event,
-                                    onBack = { currentSubScreen = "Main" },
+                                    onBack = {
+                                        currentSubScreen = "Main"
+                                        selectedEventForRegistration = null
+                                    },
                                     onRegisterSuccess = { data ->
                                         // /// SAVE THE DATA SO IT CAN BE VIEWED LATER ///
                                         registrationData = data
@@ -187,6 +190,7 @@ class MainActivity : ComponentActivity() {
                                 resetHome = true
                                 selectedTab = 0
                                 currentSubScreen = "Main"
+                                selectedEventForRegistration = null
                             }
                         )
                         "View" -> ViewRegistrationScreen(
@@ -195,6 +199,7 @@ class MainActivity : ComponentActivity() {
                             onBackToHome = {
                                 currentSubScreen = "Main"
                                 selectedTab = 0
+                                selectedEventForRegistration = null
                             }
                         )
                     }

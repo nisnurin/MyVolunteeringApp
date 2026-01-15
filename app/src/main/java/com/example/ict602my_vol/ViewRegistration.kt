@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ict602my_vol.data.RegistrationData
@@ -116,5 +117,21 @@ fun RegistrationDetailItem(label: String, value: String) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ViewRegistrationScreenPreview() {
+    ViewRegistrationScreen(
+        data = RegistrationData(
+            eventName = "Charity Fun Run",
+            location = "KLCC Park",
+            status = "Registered",
+            fullName = "John Doe",
+            email = "john.doe@example.com",
+            emergencyContactNumber = "123-4567890"
+        ),
+        onBackToHome = {}
     )
 }
