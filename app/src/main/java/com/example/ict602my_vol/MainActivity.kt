@@ -14,6 +14,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ict602my_vol.data.RegistrationData
 import com.example.ict602my_vol.ui.BottomNavigationBar
@@ -65,6 +66,7 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun AppRoot() {
         val manageEventViewModel: ManageEventViewModel = viewModel()
+        // For testing, you can change "Welcome" to "AdminDashboard" to see it immediately
         var currentScreen by remember { mutableStateOf("Welcome") }
         var selectedEventForEdit by remember { mutableStateOf<VolEvent?>(null) }
         var loginRole by remember { mutableStateOf("Volunteer") }
@@ -75,25 +77,37 @@ class MainActivity : ComponentActivity() {
             "Main" -> MainScreen(
                 onGoogleClick = { signInWithGoogle() },
                 onSignUpSuccess = { currentScreen = "Home" },
-                onNavigateToLogin = { role: String ->  // Tambah : String di sini
+                onNavigateToLogin = { role: String ->
                     loginRole = role
                     currentScreen = "LoginChoice"
                 }
             )
+
             "LoginChoice" -> {
                 if (loginRole == "Admin") {
                     AdminLoginScreen(
-                        onLoginSuccess = { currentScreen = "Home" },
+                        // UPDATED: Navigate to AdminDashboard instead of Home
+                        onLoginSuccess = { currentScreen = "AdminDashboard" },
                         onNavigateToSignUp = { currentScreen = "Main" }
                     )
                 } else {
-                    LoginScreen( // Ini skrin untuk Volunteer login
+                    LoginScreen(
                         onLoginSuccess = { currentScreen = "Home" },
                         onBackToSignUp = { currentScreen = "Main" }
                     )
                 }
             }
 
+            // NEW: Admin Dashboard Route
+            "AdminDashboard" -> AdminDashboardScreen(
+                onManageEventClick = { currentScreen = "ManageEvent" },
+                onViewReportClick = {
+                    Toast.makeText(this@MainActivity, "Opening Reports...", Toast.LENGTH_SHORT).show()
+                },
+                onLogout = {
+                    currentScreen = "Welcome"
+                }
+            )
 
             "Home" -> HomePage(
                 onManageClick = { currentScreen = "ManageEvent" },
@@ -106,16 +120,21 @@ class MainActivity : ComponentActivity() {
 
             "ManageEvent" -> ManageEventScreen(
                 viewModel = manageEventViewModel,
-                onBackClick = { currentScreen = "Home" },
+                onBackClick = {
+                    // UPDATED: Logic to return to the correct dashboard based on role
+                    if (loginRole == "Admin") currentScreen = "AdminDashboard"
+                    else currentScreen = "Home"
+                },
                 onAddEventClick = {
                     selectedEventForEdit = null
                     currentScreen = "AddEvent"
                 },
-                onEditEventClick = { event ->  // Guna 'it' atau tukar nama kat sini
+                onEditEventClick = { event ->
                     selectedEventForEdit = event as VolEvent
                     currentScreen = "AddEvent"
                 }
             )
+
             "AddEvent" -> AddEventScreen(
                 onNavigateBack = { currentScreen = "ManageEvent" },
                 eventToEdit = selectedEventForEdit
@@ -210,3 +229,17 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
+@Preview(showBackground = true)
+@Composable
+fun AdminFlowPreview() {
+    EventTest3Theme {
+        // This simulates how the app looks when on the Admin Dashboard
+        AdminDashboardScreen(
+            onManageEventClick = {},
+            onViewReportClick = {},
+            onLogout = {}
+        )
+    }
+}
+

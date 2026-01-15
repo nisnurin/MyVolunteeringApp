@@ -173,11 +173,11 @@ fun EditEventScreenPreview() {
         AddEventScreen(
             onNavigateBack = { },
             eventToEdit = VolEvent(
-                id = "1",
-                name = "Beach Cleanup",
-                organizer = "Eco-Warriors",
-                date = "25 Dec 2025",
-                location = "Port Dickson"
+                id = "",
+                name = "",
+                organizer = "",
+                date = "",
+                location = ""
             )
         )
     }

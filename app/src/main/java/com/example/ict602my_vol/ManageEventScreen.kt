@@ -20,14 +20,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.activity.compose.BackHandler
 
 @Composable
 fun ManageEventScreen(
     viewModel: ManageEventViewModel,
     onAddEventClick: () -> Unit,
     onEditEventClick: (VolEvent) -> Unit,
-    onBackClick: () -> Unit,
+    onBackClick: () -> Unit, // This is already being used by your IconButton
 ) {
+    // ADD THIS LINE: It handles the physical/system back button
+    BackHandler { onBackClick() }
+
     var showDialog by remember { mutableStateOf(false) }
     var selectedEvent by remember { mutableStateOf<VolEvent?>(null) }
 
@@ -41,9 +45,12 @@ fun ManageEventScreen(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // This IconButton is already using onBackClick,
+            // so it is now connected to the logic we put in MainActivity!
             IconButton(onClick = onBackClick) {
                 Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
             }
+            // ... (rest of your existing code)
             Text("Manage Event", fontSize = 20.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 8.dp))
             Spacer(modifier = Modifier.weight(1f))
             IconButton(onClick = {
