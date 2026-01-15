@@ -89,7 +89,9 @@ class MainActivity : ComponentActivity() {
                 // but based on your logic, we'll check loginRole.
                 if (loginRole == "Admin") {
                     AdminLoginScreen(
-                        onLoginSuccess = { currentScreen = "AdminDashboard" },
+                        onLoginSuccess = {
+                            loginRole = "Admin"
+                            currentScreen = "AdminDashboard" },
                         onNavigateToSignUp = { currentScreen = "Main" }
                     )
                 } else {
@@ -121,8 +123,11 @@ class MainActivity : ComponentActivity() {
             "ManageEvent" -> ManageEventScreen(
                 viewModel = manageEventViewModel,
                 onBackClick = {
-                    if (loginRole == "Admin") currentScreen = "AdminDashboard"
-                    else currentScreen = "Home"
+                    if (loginRole == "Admin") {
+                        currentScreen = "AdminDashboard"
+                    } else {
+                        currentScreen = "Home"
+                    }
                 },
                 onAddEventClick = {
                     selectedEventForEdit = null
