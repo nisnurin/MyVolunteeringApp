@@ -6,7 +6,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,10 +32,11 @@ import com.example.ict602my_vol.OrganizersScreen
 // ===================== HOME SCREEN =====================
 @Composable
 fun HomeScreen(paddingValues: PaddingValues,
-               onRegisterClick: () -> Unit,
+               onRegisterClick:(Event) -> Unit,
                shouldReset: Boolean = false,
                onResetComplete: () -> Unit = {}
 ) {
+
     val homeNavController = rememberNavController()
 
     // --- SAMPLE DATA  ---
@@ -72,6 +76,20 @@ fun HomeScreen(paddingValues: PaddingValues,
         }
     }
 
+    // --- !! ADD THIS NAVIGATION LOGIC !! ---
+    // This LaunchedEffect will trigger when 'shouldReset' becomes true.
+    LaunchedEffect(shouldReset) {
+        if (shouldReset) {
+            // Navigate to the start destination and clear everything on top of it.
+            homeNavController.navigate("event_list_screen") {
+                popUpTo("event_list_screen") {
+                    inclusive = true // Clears the event_list_screen itself, making it a fresh start
+                }
+            }
+            // Notify the parent composable (HomePage) that the reset is done.
+            onResetComplete()
+        }
+    }
     NavHost(
         navController = homeNavController,
         startDestination = "event_list_screen",
@@ -139,7 +157,7 @@ fun HomeScreen(paddingValues: PaddingValues,
                 onBackClick = {
                     homeNavController.popBackStack()
                 },
-                onRegisterClick = onRegisterClick
+                onRegisterClick = { onRegisterClick(selectedEvent) }
                 )
         }
 
