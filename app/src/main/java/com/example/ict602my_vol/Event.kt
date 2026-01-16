@@ -1,10 +1,11 @@
 package com.example.ict602my_vol.data
 
-data class Event(
-    val organizer: String = "",
+data class VolEvent(
+    val id: String = "",
     val name: String = "",
+    val organizer: String = "",
     val date: String = "",
     val location: String = "",
-    val imageResId: Int = 0,
-    val id: String = ""
+    val description: String = "",
+    val imageUrl: String = ""
 )

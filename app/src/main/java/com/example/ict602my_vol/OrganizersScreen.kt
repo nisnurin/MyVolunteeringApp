@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.ict602my_vol.data.Organizer
-import com.example.ict602my_vol.data.Event
+import com.example.ict602my_vol.data.VolEvent
 
 @Preview(showBackground = true)
 @Composable
