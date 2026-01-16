@@ -1,6 +1,6 @@
 package com.example.ict602my_vol
 
-import androidx.compose.foundation.Image
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -18,11 +18,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.ict602my_vol.data.Event
+import coil.compose.AsyncImage // Updated for URL images
+import com.example.ict602my_vol.data.VolEvent // Use the updated central data class
 import com.example.ict602my_vol.ui.theme.BrandBlue
 import com.example.ict602my_vol.ui.theme.DarkBadge
 
@@ -31,23 +31,37 @@ fun ActivityScreen(
     padding: PaddingValues,
     onNavigateToProfile: () -> Unit
 ) {
-    // Dummy Data based on your Event class
+    // UPDATED: Dummy Data using String URLs and the new VolEvent constructor
     val registeredEvents = listOf(
-        Event("Amanah.Co", "Save Turtle", "18 Jan 2026", "Pantai Batu Buruk", R.drawable.location_pic),
-        Event("Green World", "Mangrove Planting", "22 Feb 2026", "Setiu Wetlands", R.drawable.location_pic)
+        VolEvent(
+            id = "1",
+            name = "Amanah.Co",
+            organizer = "Save Turtle",
+            date = "18 Jan 2026",
+            location = "Pantai Batu Buruk",
+            description = "Protecting turtle nesting sites.",
+            imageUrl = "https://example.com/turtle.jpg" // Replace with a real URL or leave empty
+        ),
+        VolEvent(
+            id = "2",
+            name = "Green World",
+            organizer = "Mangrove Planting",
+            date = "22 Feb 2026",
+            location = "Setiu Wetlands",
+            description = "Restoring the mangrove ecosystem.",
+            imageUrl = "" // Coil handles empty strings gracefully
+        )
     )
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(padding)
-            .background(BrandBlue), // Matching your BrandBlue background
+            .background(BrandBlue),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // --- 1. THE BEAUTY TOGGLE ---
         ActivityToggle(onNavigateToProfile)
 
-        // --- 2. ACTIVITY LIST ---
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(bottom = 20.dp)
@@ -80,7 +94,6 @@ fun ActivityToggle(onNavigateToProfile: () -> Unit) {
             .background(Color(0xFFF2F2F2))
             .padding(4.dp)
     ) {
-        // Profile Tab (Inactive)
         Box(
             modifier = Modifier
                 .weight(1f).fillMaxHeight().clip(CircleShape)
@@ -89,7 +102,6 @@ fun ActivityToggle(onNavigateToProfile: () -> Unit) {
         ) {
             Text("Profile", color = Color.Gray)
         }
-        // Activities Tab (Active)
         Box(
             modifier = Modifier
                 .weight(1f).fillMaxHeight().clip(CircleShape)
@@ -102,7 +114,7 @@ fun ActivityToggle(onNavigateToProfile: () -> Unit) {
 }
 
 @Composable
-fun ActivityCard(event: Event) {
+fun ActivityCard(event: VolEvent) {
     Card(
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier
@@ -111,21 +123,21 @@ fun ActivityCard(event: Event) {
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column {
-            // Top Part: Image
-            Image(
-                painter = painterResource(id = event.imageResId),
+            // UPDATED: Use AsyncImage for URLs
+            AsyncImage(
+                model = event.imageUrl,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(150.dp)
+                    .background(Color.LightGray)
             )
 
-            // Bottom Part: Info Box (Using DarkBadge color from your theme)
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(DarkBadge) // Using the dark teal color from your screenshot
+                    .background(DarkBadge)
                     .padding(16.dp)
             ) {
                 Text(text = "Organizer", color = Color.White.copy(alpha = 0.7f), fontSize = 12.sp)
@@ -133,14 +145,12 @@ fun ActivityCard(event: Event) {
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Date Row
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.DateRange, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(text = event.date, color = Color.White, fontSize = 14.sp)
                 }
 
-                // Location Row
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
                     Icon(Icons.Default.LocationOn, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(8.dp))
@@ -149,5 +159,4 @@ fun ActivityCard(event: Event) {
             }
         }
     }
-
 }

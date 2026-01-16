@@ -24,7 +24,7 @@ import java.util.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(
-    event: com.example.ict602my_vol.data.Event,
+    event: com.example.ict602my_vol.data.VolEvent,
     onBack: () -> Unit,
     onRegisterSuccess: (RegistrationData) -> Unit) {
     val context = LocalContext.current

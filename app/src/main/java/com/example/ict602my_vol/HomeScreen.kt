@@ -1,73 +1,45 @@
 package com.example.ict602my_vol.ui.home
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.navigation.NavType
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
+import androidx.navigation.compose.*
 import androidx.navigation.navArgument
 import com.example.ict602my_vol.R
-import com.example.ict602my_vol.data.Event
+import com.example.ict602my_vol.data.VolEvent
 import com.example.ict602my_vol.data.Organizer
 import com.example.ict602my_vol.EventsScreen
 import com.example.ict602my_vol.EventDetailsScreen
 import com.example.ict602my_vol.OrganizersScreen
+import com.example.ict602my_vol.ManageEventViewModel
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 
-// ===================== HOME SCREEN =====================
 @Composable
-fun HomeScreen(paddingValues: PaddingValues,
-               onRegisterClick:(Event) -> Unit,
-               shouldReset: Boolean = false,
-               onResetComplete: () -> Unit = {}
+fun HomeScreen(
+    paddingValues: PaddingValues,
+    viewModel: ManageEventViewModel,
+    onRegisterClick: (VolEvent) -> Unit,
+    shouldReset: Boolean = false,
+    onResetComplete: () -> Unit = {}
 ) {
-
     val homeNavController = rememberNavController()
 
-    // --- SAMPLE DATA  ---
-    val organizers = listOf(
-        Organizer("Amanah.Co", R.drawable.company_logo),
-        Organizer("MyHelper", R.drawable.company_logo),
-        Organizer("Runner", R.drawable.company_logo),
-        Organizer("Seaboree", R.drawable.company_logo),
-        Organizer("Event Organizer", R.drawable.company_logo),
-        Organizer("Scout", R.drawable.company_logo),
-        Organizer("Eventify", R.drawable.company_logo),
-        Organizer("CrewWorks", R.drawable.company_logo),
-        Organizer("UniEvents", R.drawable.company_logo),
-        Organizer("Voluntrix", R.drawable.company_logo),
-        Organizer("Campus Hub", R.drawable.company_logo),
-        Organizer("Youth Connect", R.drawable.company_logo),
-        Organizer("ProActive", R.drawable.company_logo),
-        Organizer("NextGen Events", R.drawable.company_logo),
-    )
+    val organizers = remember {
+        listOf(
+            Organizer("Amanah.Co", R.drawable.company_logo),
+            Organizer("MyHelper", R.drawable.company_logo),
+            Organizer("Runner", R.drawable.company_logo)
+        )
+    }
 
-    val events = listOf(
-        Event("Amanah.Co", "Save Turtle", "12 Jan 2026", "Ipoh", R.drawable.location_pic),
-        Event("MyHelper", "Help Homeless", "12 Jan 2026", "KL",  R.drawable.location_pic),
-        Event("Runner", "Hari Menanam Pokok", "20 Feb 2026", "Genting", R.drawable.location_pic),
-        Event("Event Organizer", "Project 2026", "5 Mac 2026", "Penang", R.drawable.location_pic),
-        Event("Scout", "Health Awareness", "1 April 2026", "JB", R.drawable.location_pic),
-        Event("Event Organizer", "Help Homeless", "15 Mei 2026", "Cyberjaya", R.drawable.location_pic),
-        Event("Seaboree", "Beach Cleaning", "1 Jun 2026", "Muar", R.drawable.location_pic),
-        Event("Scout", "Bubur Lambuk", "10 Julai 2026", "Subang", R.drawable.location_pic)
-    )
-    androidx.compose.runtime.LaunchedEffect(shouldReset) {
+    LaunchedEffect(shouldReset) {
         if (shouldReset) {
             homeNavController.navigate("event_list_screen") {
                 popUpTo("event_list_screen") { inclusive = true }
@@ -76,115 +48,84 @@ fun HomeScreen(paddingValues: PaddingValues,
         }
     }
 
-    // --- !! ADD THIS NAVIGATION LOGIC !! ---
-    // This LaunchedEffect will trigger when 'shouldReset' becomes true.
-    LaunchedEffect(shouldReset) {
-        if (shouldReset) {
-            // Navigate to the start destination and clear everything on top of it.
-            homeNavController.navigate("event_list_screen") {
-                popUpTo("event_list_screen") {
-                    inclusive = true // Clears the event_list_screen itself, making it a fresh start
-                }
-            }
-            // Notify the parent composable (HomePage) that the reset is done.
-            onResetComplete()
-        }
-    }
     NavHost(
         navController = homeNavController,
         startDestination = "event_list_screen",
-        modifier = Modifier.fillMaxSize()// Padding Bottom Bar
+        modifier = Modifier.fillMaxSize()
     ) {
-
-        // --- ROUTE 1: EVENT LIST SCREEN ---
         composable("event_list_screen") {
-            var searchState by remember { mutableStateOf(TextFieldValue("")) }
-
-            val filteredEvents = events.filter {
-                it.name.contains(searchState.text, ignoreCase = true)
-            }
-
-            // LazyColumn searchState dan filteredEvents
             LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.White),
-                        contentPadding = paddingValues
+                modifier = Modifier.fillMaxSize().background(Color.White),
+                contentPadding = paddingValues
             ) {
-
-                // Home Interface
                 item { HeaderTitle("Event list") }
-                item { SearchBar(searchState) { searchState = it } }
+                item { SearchBar(viewModel.searchQuery) { viewModel.searchQuery = it } }
                 item {
-                    OrganizerSection(
-                        organizers = organizers,
-                        onViewAllClick = {
-                            homeNavController.navigate("organizers_screen")
-                        }
-                    )
-                }
-                item {
-                    EventHeader() {
-                        homeNavController.navigate("events_screen")
+                    OrganizerSection(organizers) {
+                        homeNavController.navigate("organizers_screen")
                     }
                 }
                 item {
-                    //
+                    EventHeader(onClick = { homeNavController.navigate("events_screen") })
                 }
-
-
-                items(filteredEvents.withIndex().toList()) { (index, event) ->
+                items(viewModel.filteredEvents) { event ->
                     EventCard(event) {
-                        homeNavController.navigate("event_details_screen/$index")
+                        homeNavController.navigate("event_details_screen/${event.id}")
                     }
                 }
-
             }
-
         }
 
-
-        // --- ROUTE 2 (Event Details) ---
         composable(
             route = "event_details_screen/{eventId}",
-            arguments = listOf(navArgument("eventId") { type = NavType.IntType })
-        ) { backStackEntry ->
-            val eventId = backStackEntry.arguments?.getInt("eventId") ?: 0
-            val selectedEvent = events.getOrNull(eventId) ?: events.first()
+            arguments = listOf(navArgument("eventId") { type = NavType.StringType })
+        ) { entry ->
+            val eventId = entry.arguments?.getString("eventId")
+            val selectedEvent = viewModel.filteredEvents.find { it.id == eventId }
 
-            EventDetailsScreen(
-                event = selectedEvent,
-                onBackClick = {
-                    homeNavController.popBackStack()
-                },
-                onRegisterClick = { onRegisterClick(selectedEvent) }
+            selectedEvent?.let {
+                EventDetailsScreen(
+                    event = it,
+                    onBackClick = { homeNavController.popBackStack() },
+                    onRegisterClick = { onRegisterClick(it) }
                 )
+            }
         }
 
-        // --- ROUTE 3: ORGANIZERS  ---
         composable("organizers_screen") {
-            OrganizersScreen(
-                onBackClick = {
-                    homeNavController.popBackStack()
-                },
-                organizers = organizers
-            )
+            OrganizersScreen({ homeNavController.popBackStack() }, organizers)
         }
 
-        // --- ROUTE 4: EVENT SCREEN  ---
         composable("events_screen") {
             EventsScreen(
-                onBackClick = {
-                    homeNavController.popBackStack()
-                },
-                events = events,
-                onEventClick = { clickedEvent ->
-                    val index = events.indexOf(clickedEvent)
-                    if (index != -1) {
-                        homeNavController.navigate("event_details_screen/$index")
-                    }
-                }
-            )
+                onBackClick = { homeNavController.popBackStack() },
+                events = viewModel.filteredEvents
+            ) { clicked ->
+                homeNavController.navigate("event_details_screen/${clicked.id}")
+            }
         }
+
+    }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun HomeScreenPreview() {
+    // In Preview, we provide a default PaddingValues
+    val dummyPadding = PaddingValues(bottom = 56.dp) // Simulating BottomBar space
+
+    // Note: If your ViewModel has complex Firebase logic in init {},
+    // the preview might show an error.
+    // Ideally, you'd use a stateless version for previews.
+
+    // For now, we attempt to render with a default VM
+    val mockViewModel: ManageEventViewModel = viewModel()
+
+    Box(modifier = Modifier.fillMaxSize().background(Color.White)) {
+        HomeScreen(
+            paddingValues = dummyPadding,
+            viewModel = mockViewModel,
+            onRegisterClick = {}
+        )
     }
 }

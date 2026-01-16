@@ -14,7 +14,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ict602my_vol.data.RegistrationData
 import com.example.ict602my_vol.ui.BottomNavigationBar
@@ -28,8 +27,8 @@ import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 
-// /// ALIAS FOR THE EVENT DATA CLASS TO AVOID CONFLICTS ///
-import com.example.ict602my_vol.data.Event as VolEvent
+// Standardizing the alias to match the HomeComponents/HomeScreen logic
+import com.example.ict602my_vol.data.VolEvent
 
 class MainActivity : ComponentActivity() {
 
@@ -65,6 +64,7 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     fun AppRoot() {
+        // Shared ViewModel for all screens
         val manageEventViewModel: ManageEventViewModel = viewModel()
         var currentScreen by remember { mutableStateOf("Welcome") }
         var selectedEventForEdit by remember { mutableStateOf<VolEvent?>(null) }
@@ -74,24 +74,16 @@ class MainActivity : ComponentActivity() {
             "Welcome" -> WelcomeScreen(onGetStarted = { currentScreen = "Main" })
             "Main" -> MainScreen(
                 onSignUpSuccess = { currentScreen = "Home" },
-                onNavigateToLogin = {
-                    currentScreen = "LoginChoice"
-                },
+                onNavigateToLogin = { currentScreen = "LoginChoice" },
                 onGoogleClick = { signInWithGoogle() }
             )
-            "Login" -> LoginScreen(
-                onLoginSuccess = { currentScreen = "Home" },
-                onBackToSignUp = { currentScreen = "Main" }
-            )
-
             "LoginChoice" -> {
-                // Here you might want a screen to choose Admin or Volunteer login,
-                // but based on your logic, we'll check loginRole.
                 if (loginRole == "Admin") {
                     AdminLoginScreen(
                         onLoginSuccess = {
                             loginRole = "Admin"
-                            currentScreen = "AdminDashboard" },
+                            currentScreen = "AdminDashboard"
+                        },
                         onNavigateToSignUp = { currentScreen = "Main" }
                     )
                 } else {
@@ -107,12 +99,11 @@ class MainActivity : ComponentActivity() {
                 onViewReportClick = {
                     Toast.makeText(this@MainActivity, "Opening Reports...", Toast.LENGTH_SHORT).show()
                 },
-                onLogout = {
-                    currentScreen = "Welcome"
-                }
+                onLogout = { currentScreen = "Welcome" }
             )
 
             "Home" -> HomePage(
+                manageEventViewModel = manageEventViewModel, // Pass shared VM
                 onManageClick = { currentScreen = "ManageEvent" },
                 onLogout = {
                     auth.signOut()
@@ -120,21 +111,18 @@ class MainActivity : ComponentActivity() {
                     currentScreen = "Welcome"
                 }
             )
+
             "ManageEvent" -> ManageEventScreen(
                 viewModel = manageEventViewModel,
                 onBackClick = {
-                    if (loginRole == "Admin") {
-                        currentScreen = "AdminDashboard"
-                    } else {
-                        currentScreen = "Home"
-                    }
+                    currentScreen = if (loginRole == "Admin") "AdminDashboard" else "Home"
                 },
                 onAddEventClick = {
                     selectedEventForEdit = null
                     currentScreen = "AddEvent"
                 },
                 onEditEventClick = { event ->
-                    selectedEventForEdit = event as? VolEvent
+                    selectedEventForEdit = event
                     currentScreen = "AddEvent"
                 }
             )
@@ -148,6 +136,7 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     fun HomePage(
+        manageEventViewModel: ManageEventViewModel,
         onManageClick: () -> Unit,
         onLogout: () -> Unit,
         userViewModel: UserViewModel = viewModel()
@@ -158,81 +147,78 @@ class MainActivity : ComponentActivity() {
         var selectedEventForRegistration by remember { mutableStateOf<VolEvent?>(null) }
         var resetHome by remember { mutableStateOf(false) }
 
-        Box(modifier = Modifier.fillMaxSize()) {
-            Scaffold(
-                bottomBar = {
-                    if (currentSubScreen == "Main") {
-                        BottomNavigationBar(selected = selectedTab, onSelect = { selectedTab = it })
-                    }
-                }
-            ) { innerPadding ->
-                Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
-                    when (selectedTab) {
-                        0 -> HomeScreen(
-                            paddingValues = innerPadding,
-                            onRegisterClick = { event ->
-                                selectedEventForRegistration = event
-                                currentSubScreen = "Register"
-                            },
-                            shouldReset = resetHome,
-                            onResetComplete = { resetHome = false }
-                        )
-                        1 -> NotificationScreen(innerPadding, userViewModel)
-                        2 -> ProfileScreen(
-                            padding = innerPadding,
-                            userViewModel = userViewModel,
-                            onNavigateToActivities = { selectedTab = 3 },
-                            onManageEventsClick = onManageClick,
-                            onLogout = onLogout
-                        )
-                        3 -> ActivityScreen(padding = innerPadding, onNavigateToProfile = { selectedTab = 2 })
-                    }
+        Scaffold(
+            bottomBar = {
+                if (currentSubScreen == "Main") {
+                    BottomNavigationBar(selected = selectedTab, onSelect = { selectedTab = it })
                 }
             }
+        ) { innerPadding ->
+            Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+                when (selectedTab) {
+                    0 -> HomeScreen(
+                        paddingValues = innerPadding,
+                        viewModel = manageEventViewModel, // Pass VM to HomeScreen
+                        onRegisterClick = { event ->
+                            selectedEventForRegistration = event
+                            currentSubScreen = "Register"
+                        },
+                        shouldReset = resetHome,
+                        onResetComplete = { resetHome = false }
+                    )
+                    1 -> NotificationScreen(innerPadding, userViewModel)
+                    2 -> ProfileScreen(
+                        padding = innerPadding,
+                        userViewModel = userViewModel,
+                        onNavigateToActivities = { selectedTab = 3 },
+                        onManageEventsClick = onManageClick,
+                        onLogout = onLogout
+                    )
+                    3 -> ActivityScreen(padding = innerPadding, onNavigateToProfile = { selectedTab = 2 })
+                }
 
-            if (currentSubScreen != "Main") {
-                Surface(modifier = Modifier.fillMaxSize(), color = Color.White) {
-                    when (currentSubScreen) {
-                        "Register" -> {
-                            selectedEventForRegistration?.let { event ->
-                                RegisterScreen(
-                                    event = event,
-                                    onBack = {
-                                        currentSubScreen = "Main"
-                                        selectedEventForRegistration = null
-                                    },
-                                    onRegisterSuccess = { data ->
-                                        registrationData = data
-                                        currentSubScreen = "Success"
-                                    }
-                                )
+                // Sub-screens for Registration Flow
+                if (currentSubScreen != "Main") {
+                    Surface(modifier = Modifier.fillMaxSize(), color = Color.White) {
+                        when (currentSubScreen) {
+                            "Register" -> {
+                                selectedEventForRegistration?.let { event ->
+                                    RegisterScreen(
+                                        event = event,
+                                        onBack = {
+                                            currentSubScreen = "Main"
+                                            selectedEventForRegistration = null
+                                        },
+                                        onRegisterSuccess = { data ->
+                                            registrationData = data
+                                            currentSubScreen = "Success"
+                                        }
+                                    )
+                                }
                             }
+                            "Success" -> SuccessScreen(
+                                eventName = registrationData.eventName,
+                                onViewRegistration = { currentSubScreen = "View" },
+                                onBackToHome = {
+                                    resetHome = true
+                                    selectedTab = 0
+                                    currentSubScreen = "Main"
+                                }
+                            )
+                            "View" -> ViewRegistrationScreen(
+                                data = registrationData,
+                                onBackToHome = {
+                                    currentSubScreen = "Main"
+                                    selectedTab = 0
+                                }
+                            )
                         }
-                        "Success" -> SuccessScreen(
-                            eventName = registrationData.eventName,
-                            onViewRegistration = { currentSubScreen = "View" },
-                            onBackToHome = {
-                                resetHome = true
-                                selectedTab = 0
-                                currentSubScreen = "Main"
-                                selectedEventForRegistration = null
-                            }
-                        )
-                        "View" -> ViewRegistrationScreen(
-                            data = registrationData,
-                            onBackToHome = {
-                                currentSubScreen = "Main"
-                                selectedTab = 0
-                                selectedEventForRegistration = null
-                            }
-                        )
                     }
                 }
             }
         }
     }
 
-    @Deprecated("Deprecated in Java")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == RC_SIGN_IN) {
@@ -247,17 +233,5 @@ class MainActivity : ComponentActivity() {
                 }
             } catch (e: ApiException) { e.printStackTrace() }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun AdminFlowPreview() {
-    EventTest3Theme {
-        AdminDashboardScreen(
-            onManageEventClick = {},
-            onViewReportClick = {},
-            onLogout = {}
-        )
     }
 }
