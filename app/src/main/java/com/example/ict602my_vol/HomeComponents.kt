@@ -45,7 +45,8 @@ import androidx.compose.ui.unit.sp
 import com.example.ict602my_vol.PrimaryBackground
 import com.example.ict602my_vol.data.Event
 import com.example.ict602my_vol.data.Organizer
-
+import androidx.compose.ui.tooling.preview.Preview
+import com.example.ict602my_vol.R
 
 val ArrowColor = Color(0xFF8B8B8B)
 // ===================== HEADER TITLE =====================
@@ -266,3 +267,34 @@ fun EventCard(event: Event, onClick: () -> Unit) {
     }
 }
 
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun FullHomeScreenPreview() {
+    // 1. Sediakan data dummy untuk dipaparkan dalam Preview
+    val dummyPadding = PaddingValues(0.dp)
+
+    // 2. Panggil HomeScreen
+    // Nota: Jika HomeScreen anda berada dalam fail yang berbeza,
+    // pastikan fungsi ini diletakkan di tempat yang boleh mengakses data dummy tersebut.
+    HomeScreen(
+        paddingValues = dummyPadding,
+        onRegisterClick = {},
+        shouldReset = false,
+        onResetComplete = {}
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun EventCardPreview() {
+    // Preview khusus untuk satu kad event sahaja
+    val sampleEvent = Event(
+        organizer = "Amanah.Co",
+        name = "Save Turtle",
+        date = "12 Jan 2026",
+        location = "Ipoh",
+        imageResId = R.drawable.location_pic
+    )
+    EventCard(event = sampleEvent, onClick = {})
+}
