@@ -4,23 +4,27 @@ import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import com.example.ict602my_vol.data.VolEvent
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.ListenerRegistration
 
 class ManageEventViewModel : ViewModel() {
     private val db = FirebaseFirestore.getInstance()
 
-    // Using a private state list to manage internal changes
+    // Store the listener so we can clean it up later to prevent memory leaks
+    private var listenerRegistration: ListenerRegistration? = null
+
+    // Internal list that holds all events from Firestore
     private val _allEvents = mutableStateListOf<VolEvent>()
 
-    // State for the search bar
+    // State for the search bar text
     var searchQuery by mutableStateOf("")
 
     /**
-     * Updated FilteredEvents:
-     * Now searches through Name, Location, and Organizer for a better user experience.
+     * Optimized FilteredEvents:
+     * Using derivedStateOf ensures that we only re-run the filter logic
+     * when the searchQuery or the event list actually changes.
      */
-    val filteredEvents: List<VolEvent>
-        get() = if (searchQuery.isEmpty()) {
+    val filteredEvents: List<VolEvent> by derivedStateOf {
+        if (searchQuery.isEmpty()) {
             _allEvents
         } else {
             _allEvents.filter { event ->
@@ -29,21 +33,24 @@ class ManageEventViewModel : ViewModel() {
                         event.organizer.contains(searchQuery, ignoreCase = true)
             }
         }
+    }
 
     init {
         listenToEvents()
     }
 
     /**
-     * Real-time listener:
-     * Automatically updates the UI whenever data changes in Firestore.
+     * Real-time listener for Firestore.
+     * Any changes made in the Firebase Console or by Admin will
+     * update the UI instantly without refreshing.
      */
     private fun listenToEvents() {
-        // We order by date so the newest/closest events appear in a logical order
-        db.collection("events")
+        // orderby("date") helps keep the events organized chronologically
+        listenerRegistration = db.collection("events")
+            .orderBy("date")
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    // Log error here if you have a logging system
+                    // Log error if necessary
                     return@addSnapshotListener
                 }
 
@@ -56,15 +63,13 @@ class ManageEventViewModel : ViewModel() {
                                 name = doc.getString("name") ?: "",
                                 organizer = doc.getString("organizer") ?: "General",
                                 date = doc.getString("date") ?: "",
-                                // FULLY SYNCED: Pulling 'time' from Firestore
-                                time = doc.getString("time") ?: "",
+                                time = doc.getString("time") ?: "", // Critical for your stacked UI
                                 location = doc.getString("location") ?: "",
                                 description = doc.getString("description") ?: "",
                                 imageUrl = doc.getString("imageUrl") ?: ""
                             )
                             _allEvents.add(event)
                         } catch (e: Exception) {
-                            // Prevents the app from crashing if one document has bad data
                             e.printStackTrace()
                         }
                     }
@@ -73,14 +78,19 @@ class ManageEventViewModel : ViewModel() {
     }
 
     /**
-     * Delete function:
-     * Removes the event from Firestore. The SnapshotListener above
-     * will automatically remove it from the list once the deletion is confirmed.
+     * Deletes an event from Firestore using its document ID.
      */
     fun deleteEvent(event: VolEvent) {
         db.collection("events").document(event.id).delete()
-            .addOnFailureListener {
-                // Potential for a Toast or error message here
-            }
+    }
+
+    /**
+     * CLEANUP:
+     * This stops the Firestore listener when the user leaves the screen,
+     * saving battery and data.
+     */
+    override fun onCleared() {
+        super.onCleared()
+        listenerRegistration?.remove()
     }
 }

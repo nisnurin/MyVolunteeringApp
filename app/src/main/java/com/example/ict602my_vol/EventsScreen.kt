@@ -52,7 +52,7 @@ fun EventsScreen(
     onEventClick: (VolEvent) -> Unit
 ) {
     Scaffold(
-        containerColor = EventScreenPrimaryColor, // Set scaffold color to match background
+        containerColor = EventScreenPrimaryColor,
         topBar = {
             TopAppBar(
                 title = { Text("Events", color = Color.Black, fontWeight = FontWeight.SemiBold) },
@@ -71,7 +71,7 @@ fun EventsScreen(
                 .fillMaxSize()
                 .padding(paddingValues),
             contentPadding = PaddingValues(top = 16.dp, bottom = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp) // Slightly more space for better card breathing
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             item {
                 Row(
@@ -139,7 +139,7 @@ fun EventCardExtended(event: VolEvent, onClick: () -> Unit) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(EventScreenBadgeColor)
-                    .padding(16.dp) // Increased padding for a premium feel
+                    .padding(16.dp)
             ) {
                 Text(
                     text = event.organizer.uppercase(),
@@ -155,37 +155,41 @@ fun EventCardExtended(event: VolEvent, onClick: () -> Unit) {
                     fontSize = 20.sp
                 )
 
-                Spacer(Modifier.height(10.dp))
+                // Compact gap between title and info
+                Spacer(Modifier.height(4.dp))
 
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
+                // --- INFO BLOCK: Date, Time, Location ---
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(2.dp) // Tight vertical spacing
                 ) {
-                    Icon(Icons.Default.DateRange, null, Modifier.size(14.dp), Color.White)
-                    Spacer(Modifier.width(6.dp))
-
-                    // LOGIC: Show Time only if not empty
-                    val dateTimeText = if (event.time.isNotEmpty()) {
-                        "${event.date} • ${event.time}"
-                    } else {
-                        event.date
+                    // Line 1: Date
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.DateRange, null, Modifier.size(13.dp), Color.White)
+                        Spacer(Modifier.width(8.dp))
+                        Text(text = event.date, color = Color.White, fontSize = 12.sp)
                     }
 
-                    Text(
-                        text = dateTimeText,
-                        color = Color.White,
-                        fontSize = 12.sp
-                    )
+                    // Line 2: Time
+                    if (event.time.isNotEmpty()) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                painter = painterResource(id = android.R.drawable.ic_menu_recent_history),
+                                contentDescription = null,
+                                modifier = Modifier.size(13.dp),
+                                tint = Color.White
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text(text = event.time, color = Color.White, fontSize = 12.sp)
+                        }
+                    }
 
-                    Spacer(modifier = Modifier.weight(1f)) // Push location to the right
-
-                    Icon(Icons.Default.LocationOn, null, Modifier.size(14.dp), Color.White)
-                    Spacer(Modifier.width(4.dp))
-                    Text(
-                        text = event.location,
-                        color = Color.White,
-                        fontSize = 12.sp
-                    )
+                    // Line 3: Location
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.LocationOn, null, Modifier.size(13.dp), Color.White)
+                        Spacer(Modifier.width(8.dp))
+                        Text(text = event.location, color = Color.White, fontSize = 12.sp)
+                    }
                 }
             }
         }

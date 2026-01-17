@@ -10,10 +10,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import androidx.navigation.navArgument
@@ -33,8 +32,10 @@ fun HomeScreen(
     shouldReset: Boolean = false,
     onResetComplete: () -> Unit = {}
 ) {
+    // Controller for nested navigation within the Home Tab
     val homeNavController = rememberNavController()
 
+    // Sample data for organizers
     val organizers = remember {
         listOf(
             Organizer("Amanah.Co", R.drawable.company_logo),
@@ -43,6 +44,7 @@ fun HomeScreen(
         )
     }
 
+    // Handle reset signal (e.g., when clicking the Home icon in BottomBar)
     LaunchedEffect(shouldReset) {
         if (shouldReset) {
             homeNavController.navigate("event_list_screen") {
@@ -52,13 +54,13 @@ fun HomeScreen(
         }
     }
 
-    // Apply padding here so it affects all screens in the NavHost
     Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
         NavHost(
             navController = homeNavController,
             startDestination = "event_list_screen",
             modifier = Modifier.fillMaxSize()
         ) {
+            // Main Feed Screen
             composable("event_list_screen") {
                 LazyColumn(
                     modifier = Modifier
@@ -79,7 +81,7 @@ fun HomeScreen(
                         EventHeader(onClick = { homeNavController.navigate("events_screen") })
                     }
 
-                    // Check if list is empty for better User Experience
+                    // Empty Search Logic
                     if (viewModel.filteredEvents.isEmpty() && viewModel.searchQuery.isNotEmpty()) {
                         item {
                             Box(
@@ -90,9 +92,8 @@ fun HomeScreen(
                             }
                         }
                     } else {
+                        // Displaying the events using the updated compact EventCard
                         items(viewModel.filteredEvents) { event ->
-                            // This EventCard is the one we updated in HomeComponents.kt
-                            // to show the 'time' field.
                             EventCard(event) {
                                 homeNavController.navigate("event_details_screen/${event.id}")
                             }
@@ -101,6 +102,7 @@ fun HomeScreen(
                 }
             }
 
+            // Navigation Route: Event Details
             composable(
                 route = "event_details_screen/{eventId}",
                 arguments = listOf(navArgument("eventId") { type = NavType.StringType })
@@ -117,10 +119,12 @@ fun HomeScreen(
                 }
             }
 
+            // Navigation Route: All Organizers
             composable("organizers_screen") {
                 OrganizersScreen({ homeNavController.popBackStack() }, organizers)
             }
 
+            // Navigation Route: Full Events List
             composable("events_screen") {
                 EventsScreen(
                     onBackClick = { homeNavController.popBackStack() },
@@ -133,20 +137,14 @@ fun HomeScreen(
     }
 }
 
-@SuppressLint("ViewModelConstructorInComposable")
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun HomeScreenPreview() {
-    // 1. Create a dummy ViewModel or mock data
-    // Note: This assumes your ManageEventViewModel can be instantiated without a
-    // real Firebase connection during preview, or that you use a local mock.
-    val mockViewModel = ManageEventViewModel()
+    val mockViewModel: ManageEventViewModel = viewModel()
 
-    // 2. Wrap in your App Theme
-    // Replace 'YourAppTheme' with the actual theme name from your project
     MaterialTheme {
         HomeScreen(
-            paddingValues = PaddingValues(0.dp), // Simulation of Scaffold padding
+            paddingValues = PaddingValues(0.dp),
             viewModel = mockViewModel,
             onRegisterClick = {},
             shouldReset = false,

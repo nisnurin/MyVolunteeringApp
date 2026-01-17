@@ -175,43 +175,35 @@ fun EventCard(event: VolEvent, onClick: () -> Unit) {
                 Text(event.organizer, color = Color.White.copy(alpha = 0.8f), fontSize = 11.sp)
                 Text(event.name, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
 
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(top = 8.dp)
+                // --- STACKED INFO COLUMN ---
+                Column(
+                    modifier = Modifier.padding(top = 4.dp),
+                    verticalArrangement = Arrangement.spacedBy(2.dp) // Gap is very close
                 ) {
-                    Icon(
-                        Icons.Default.DateRange,
-                        contentDescription = null,
-                        modifier = Modifier.size(14.dp),
-                        tint = Color.White
-                    )
-
-                    // IMPROVED: Logic to show time only if it exists
-                    val displayDateTime = if (event.time.isNotEmpty()) {
-                        " ${event.date} • ${event.time}"
-                    } else {
-                        " ${event.date}"
+                    // Line 1: Date
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.DateRange, null, Modifier.size(13.dp), Color.White)
+                        Text(text = " ${event.date}", color = Color.White, fontSize = 12.sp)
                     }
 
-                    Text(
-                        text = displayDateTime,
-                        color = Color.White,
-                        fontSize = 12.sp
-                    )
+                    // Line 2: Time
+                    if (event.time.isNotEmpty()) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                painter = painterResource(id = android.R.drawable.ic_menu_recent_history),
+                                contentDescription = null,
+                                modifier = Modifier.size(13.dp),
+                                tint = Color.White
+                            )
+                            Text(text = " ${event.time}", color = Color.White, fontSize = 12.sp)
+                        }
+                    }
 
-                    Spacer(Modifier.weight(1f)) // Pushes location to the right
-
-                    Icon(
-                        Icons.Default.LocationOn,
-                        contentDescription = null,
-                        modifier = Modifier.size(14.dp),
-                        tint = Color.White
-                    )
-                    Text(
-                        text = " ${event.location}",
-                        color = Color.White,
-                        fontSize = 12.sp
-                    )
+                    // Line 3: Location
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.LocationOn, null, Modifier.size(13.dp), Color.White)
+                        Text(text = " ${event.location}", color = Color.White, fontSize = 12.sp)
+                    }
                 }
             }
         }
