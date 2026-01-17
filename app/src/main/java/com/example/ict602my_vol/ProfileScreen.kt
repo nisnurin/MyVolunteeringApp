@@ -24,27 +24,115 @@ import coil.compose.AsyncImage
 import com.example.ict602my_vol.ui.theme.BrandBlue
 import com.example.ict602my_vol.ui.theme.DarkBadge
 
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
+
 @Composable
 fun ProfileScreen(
-    padding: PaddingValues,
+    padding: PaddingValues, // Received from Scaffold in MainScreen
     userViewModel: UserViewModel,
     onNavigateToActivities: () -> Unit,
     onLogout: () -> Unit,
     onManageEventsClick: () -> Unit
 ) {
-    // On this page, selectedIndex is always 0 (Profile)
+    val context = LocalContext.current
     val selectedIndex = 0
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        if (uri != null) userViewModel.selectedImageUri = uri
+        if (uri != null) {
+            userViewModel.saveProfileImage(uri)
+        }
+    }
+
+    var showEditAboutDialog by remember { mutableStateOf(false) }
+    var tempAboutMe by remember { mutableStateOf("") }
+
+    var showEditStoryDialog by remember { mutableStateOf(false) }
+    var tempStory by remember { mutableStateOf("") }
+
+    if (showEditStoryDialog) {
+        AlertDialog(
+            onDismissRequest = { showEditStoryDialog = false },
+            title = { Text("Edit My Story") },
+            text = {
+                OutlinedTextField(
+                    value = tempStory,
+                    onValueChange = { tempStory = it },
+                    modifier = Modifier.fillMaxWidth().height(150.dp),
+                    label = { Text("Tell your story") },
+                    placeholder = { Text("e.g., I love volunteering because...") },
+                    maxLines = 5
+                )
+            },
+            confirmButton = {
+                @Suppress("NAME_SHADOWING")
+                TextButton(onClick = {
+                    userViewModel.updateUserStory(tempStory) { success ->
+                        if (success) {
+                            showEditStoryDialog = false
+                            Toast.makeText(context, "Story saved successfully", Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(context, "Failed to save story", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }) {
+                    Text("Save")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showEditStoryDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    if (showEditAboutDialog) {
+        AlertDialog(
+            onDismissRequest = { showEditAboutDialog = false },
+            title = { Text("Edit About Me") },
+            text = {
+                OutlinedTextField(
+                    value = tempAboutMe,
+                    onValueChange = { tempAboutMe = it },
+                    modifier = Modifier.fillMaxWidth().height(100.dp),
+                    label = { Text("Short Bio") },
+                    maxLines = 3
+                )
+            },
+            confirmButton = {
+                @Suppress("NAME_SHADOWING")
+                TextButton(onClick = {
+                    userViewModel.updateUserProfile(
+                        userViewModel.userName,
+                        userViewModel.userNationality,
+                        tempAboutMe
+                    ) { success ->
+                        if (success) {
+                            showEditAboutDialog = false
+                            Toast.makeText(context, "About Me saved successfully", Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(context, "Failed to save About Me", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }) {
+                    Text("Save")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showEditAboutDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(padding)
+            .padding(padding) // Ensures content is not hidden by BottomNav
             .background(Color.White),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -86,10 +174,7 @@ fun ProfileScreen(
                         .clip(CircleShape)
                         .background(if (isSelected) Color.White else Color.Transparent)
                         .clickable {
-                            // IF CLICK ACTIVITIES (index 1), GO TO NEW PAGE
-                            if (index == 1) {
-                                onNavigateToActivities()
-                            }
+                            if (index == 1) onNavigateToActivities()
                         },
                     contentAlignment = Alignment.Center
                 ) {
@@ -102,7 +187,7 @@ fun ProfileScreen(
             }
         }
 
-        // --- 2. AVATAR WITH SOFT SHADOW ---
+        // --- 2. AVATAR ---
         Spacer(modifier = Modifier.height(10.dp))
         Surface(
             modifier = Modifier.size(140.dp),
@@ -112,7 +197,7 @@ fun ProfileScreen(
         ) {
             AsyncImage(
                 model = userViewModel.selectedImageUri ?: R.drawable.location_pic,
-                contentDescription = null,
+                contentDescription = "Profile Picture",
                 modifier = Modifier
                     .fillMaxSize()
                     .clip(CircleShape)
@@ -123,7 +208,7 @@ fun ProfileScreen(
 
         Spacer(modifier = Modifier.height(15.dp))
 
-        // --- 3. POLISHED BUTTON ---
+        // --- 3. EDIT PHOTO BUTTON ---
         Button(
             onClick = { launcher.launch("image/*") },
             colors = ButtonDefaults.buttonColors(containerColor = BrandBlue),
@@ -137,26 +222,34 @@ fun ProfileScreen(
 
         // --- 4. USER INFO ---
         Column(
-            modifier = Modifier.fillMaxWidth().padding(24.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.Start
         ) {
-            Text(text = userViewModel.userName, fontSize = 26.sp, fontWeight = FontWeight.Black, color = Color.Black)
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = userViewModel.userName,
+                fontSize = 26.sp,
+                fontWeight = FontWeight.Black,
+                color = Color.Black
+            )
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
                 Icon(Icons.Default.Email, null, modifier = Modifier.size(16.dp), tint = Color.Gray)
                 Spacer(Modifier.width(8.dp))
                 Text(text = userViewModel.userEmail, color = Color.Gray)
             }
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
                 Icon(Icons.Default.LocationOn, null, modifier = Modifier.size(16.dp), tint = Color.Gray)
                 Spacer(Modifier.width(8.dp))
                 Text(text = userViewModel.userNationality, color = Color.Gray)
             }
         }
 
-        // --- 5. BOTTOM SECTION ---
+        // --- 5. BOTTOM SECTION (Now uses Weight to fill screen) ---
         Box(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
+                .weight(1f) // This forces the box to take up all remaining space
                 .clip(RoundedCornerShape(topStart = 35.dp, topEnd = 35.dp))
                 .background(BrandBlue)
         ) {
@@ -169,15 +262,70 @@ fun ProfileScreen(
                         .padding(20.dp),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
-                    StatItem(count = "2", label = "Registered Event")
-                    StatItem(count = "8", label = "Available Event")
+                    // Linked to ViewModel stats
+                    StatItem(count = userViewModel.registeredEventsCount.toString(), label = "Registered")
+                    StatItem(count = userViewModel.availableEventsCount.toString(), label = "Available")
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                Text("About Me", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text("My Story", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                    IconButton(
+                        onClick = {
+                            tempStory = userViewModel.userStory
+                            showEditStoryDialog = true
+                        },
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Edit Story",
+                            tint = Color.White,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+                
+                Column(modifier = Modifier.padding(top = 8.dp)) {
+                    // This shows the userStory from database
+                    Text(
+                        text = userViewModel.userStory,
+                        color = Color.White.copy(alpha = 0.8f),
+                        fontSize = 16.sp
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text("About Me", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                    IconButton(
+                        onClick = {
+                            tempAboutMe = userViewModel.userAboutMe
+                            showEditAboutDialog = true
+                        },
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Edit About Me",
+                            tint = Color.White,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+
                 Text(
-                    "Passionate volunteer currently exploring new social activities in Terengganu.",
+                    text = userViewModel.userAboutMe,
                     color = Color.White.copy(alpha = 0.8f),
                     modifier = Modifier.padding(top = 8.dp),
                     lineHeight = 20.sp
@@ -186,6 +334,7 @@ fun ProfileScreen(
         }
     }
 }
+
 @Composable
 fun StatItem(count: String, label: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {

@@ -18,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.example.ict602my_vol.UserViewModel
 // Import your custom colors
 import com.example.ict602my_vol.ui.theme.BrandBlue
 import com.example.ict602my_vol.ui.theme.DarkBadge
@@ -89,6 +90,7 @@ fun NotificationScreen(padding: PaddingValues, userViewModel: UserViewModel) {
             item { NotificationItem("Activity completed") }
 
             item { Spacer(modifier = Modifier.height(16.dp)) }
+
             item { SectionTitle("This Week") }
             item { NotificationItem("Event reminder") }
             item { NotificationItem("New volunteer opportunity") }

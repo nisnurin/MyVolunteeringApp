@@ -1,0 +1,210 @@
+package com.example.ict602my_vol
+
+import android.net.Uri
+import android.util.Log
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.ViewModel
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.SetOptions
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
+
+class UserViewModel : ViewModel() {
+    // This variable holds the "Source of Truth" for the image
+    var selectedImageUri by mutableStateOf<Uri?>(null)
+
+    // User details with default "Loading" state
+    var userName by mutableStateOf("Loading...")
+    var userEmail by mutableStateOf("Loading...")
+    var userNationality by mutableStateOf("Loading...")
+    var userAboutMe by mutableStateOf("Passionate volunteer currently exploring new social activities.")
+    var userPhone by mutableStateOf("-")
+    var userGender by mutableStateOf("-")
+    var userStory by mutableStateOf("I love volunteering!")
+
+    // Stats
+    var registeredEventsCount by mutableIntStateOf(0)
+    var availableEventsCount by mutableIntStateOf(0)
+
+    // Role
+    var isAdmin by mutableStateOf(false)
+
+    private val authStateListener = FirebaseAuth.AuthStateListener { fetchUserData() }
+
+    init {
+        Firebase.auth.addAuthStateListener(authStateListener)
+        fetchUserData()
+        fetchEventStats()
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        Firebase.auth.removeAuthStateListener(authStateListener)
+    }
+
+    fun fetchUserData() {
+        val user = Firebase.auth.currentUser
+        if (user == null) {
+            // User is signed out, reset to guest state
+            userName = "Guest"
+            userEmail = "Not Logged In"
+            userNationality = "-"
+            isAdmin = false
+            selectedImageUri = null
+            registeredEventsCount = 0
+            return
+        }
+
+        // User is signed in. Set initial data from auth profile.
+        userEmail = user.email ?: "No Email"
+        userName = user.displayName ?: "Volunteer"
+        val db = Firebase.firestore
+
+        // Step 1: Check 'volunteers' collection first for detailed info
+        db.collection("volunteers").document(user.uid).get()
+            .addOnSuccessListener { volunteerDoc ->
+                if (volunteerDoc != null && volunteerDoc.exists()) {
+                    // Data found in 'volunteers', this is the primary source of truth
+                    val vName = volunteerDoc.getString("fullName")
+                    val vNationality = volunteerDoc.getString("nationality")
+                    val vAbout = volunteerDoc.getString("aboutMe")
+                    val vImage = volunteerDoc.getString("profileImageUri")
+                    val vEmergencyPhone = volunteerDoc.getString("emergencyContactPhone")
+                    val vPhone = volunteerDoc.getString("phone")
+                    val vGender = volunteerDoc.getString("gender")
+                    val vStory = volunteerDoc.getString("story")
+
+                    if (!vName.isNullOrEmpty()) userName = vName
+                    if (!vNationality.isNullOrEmpty()) userNationality = vNationality
+                    if (!vAbout.isNullOrEmpty()) userAboutMe = vAbout
+                    if (!vImage.isNullOrEmpty()) selectedImageUri = Uri.parse(vImage)
+                    if (!vStory.isNullOrEmpty()) userStory = vStory
+                    
+                    // Prioritize phone (signup phone) if available, otherwise fallback or keep default
+                    if (!vPhone.isNullOrEmpty()) {
+                        userPhone = vPhone
+                    } else if (!vEmergencyPhone.isNullOrEmpty()) {
+                        userPhone = vEmergencyPhone
+                    }
+                    
+                    if (!vGender.isNullOrEmpty()) userGender = vGender
+
+                    // Simple check for registered events
+                    registeredEventsCount = if (volunteerDoc.contains("eventName")) 1 else 0
+                } else {
+                    // Step 2: Not in 'volunteers', check 'users' (for admins or basic users)
+                    db.collection("users").document(user.uid).get()
+                        .addOnSuccessListener { userDoc ->
+                            if (userDoc != null && userDoc.exists()) {
+                                if (userDoc.getString("role") == "admin") isAdmin = true
+
+                                val firestoreName = userDoc.getString("fullName")
+                                val firestoreNationality = userDoc.getString("nationality")
+                                val firestorePhone = userDoc.getString("phone")
+
+                                if (!firestoreName.isNullOrEmpty()) userName = firestoreName
+                                if (!firestoreNationality.isNullOrEmpty()) userNationality = firestoreNationality
+                                if (!firestorePhone.isNullOrEmpty()) userPhone = firestorePhone
+                            }
+                        }
+                }
+            }
+            .addOnFailureListener { e ->
+                Log.e("UserViewModel", "Error fetching user data from Firestore", e)
+                // Fallback to auth data if Firestore fails
+                if (userNationality == "Loading...") userNationality = "Unknown Location"
+            }
+    }
+
+    fun fetchEventStats() {
+        val db = Firebase.firestore
+        db.collection("events").get()
+            .addOnSuccessListener { result ->
+                availableEventsCount = result.size()
+            }
+            .addOnFailureListener {
+                availableEventsCount = 0
+            }
+    }
+
+    fun updateUserProfile(newName: String, newNationality: String, newAbout: String, onResult: (Boolean) -> Unit) {
+        val user = Firebase.auth.currentUser
+        if (user != null) {
+            val db = Firebase.firestore
+            val updates = hashMapOf<String, Any>(
+                "fullName" to newName,
+                "nationality" to newNationality,
+                "aboutMe" to newAbout
+            )
+
+            // Update in volunteers collection (primary for volunteers)
+            db.collection("volunteers").document(user.uid)
+                .set(updates, SetOptions.merge()) // Use set with merge to create or update
+                .addOnSuccessListener {
+                    userName = newName
+                    userNationality = newNationality
+                    userAboutMe = newAbout
+                    onResult(true)
+                }
+                .addOnFailureListener { onResult(false) }
+        }
+    }
+
+    fun updateUserStory(newStory: String, onResult: (Boolean) -> Unit) {
+        val user = Firebase.auth.currentUser
+        if (user != null) {
+            val db = Firebase.firestore
+            val updates = hashMapOf<String, Any>(
+                "story" to newStory
+            )
+            db.collection("volunteers").document(user.uid)
+                .set(updates, SetOptions.merge())
+                .addOnSuccessListener {
+                    userStory = newStory
+                    onResult(true)
+                }
+                .addOnFailureListener { onResult(false) }
+        } else {
+            onResult(false)
+        }
+    }
+
+    fun updateUserDetails(newPhone: String, newGender: String, onResult: (Boolean) -> Unit) {
+        val user = Firebase.auth.currentUser
+        if (user != null) {
+            val db = Firebase.firestore
+            val updates = hashMapOf<String, Any>(
+                "phone" to newPhone, // Update the main phone field
+                "emergencyContactPhone" to newPhone, // Optionally keep this in sync or remove if distinct
+                "gender" to newGender
+            )
+            db.collection("volunteers").document(user.uid)
+                .set(updates, SetOptions.merge())
+                .addOnSuccessListener {
+                    userPhone = newPhone
+                    userGender = newGender
+                    onResult(true)
+                }
+                .addOnFailureListener { onResult(false) }
+        } else {
+            onResult(false)
+        }
+    }
+
+    fun saveProfileImage(uri: Uri) {
+        selectedImageUri = uri
+        val user = Firebase.auth.currentUser
+        if (user != null) {
+            val db = Firebase.firestore
+            val updates = hashMapOf<String, Any>(
+                "profileImageUri" to uri.toString()
+            )
+            db.collection("volunteers").document(user.uid)
+                .set(updates, SetOptions.merge())
+        }
+    }
+}
