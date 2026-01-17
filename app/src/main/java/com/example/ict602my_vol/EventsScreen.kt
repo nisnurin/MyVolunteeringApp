@@ -24,8 +24,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage // For loading Firebase URLs
-import com.example.ict602my_vol.data.VolEvent // Use updated central class
+import coil.compose.AsyncImage
+import com.example.ict602my_vol.data.VolEvent
 
 val EventScreenPrimaryColor = Color(0xFF36B8B1)
 val EventScreenBadgeColor = Color(0xFF266668)
@@ -34,8 +34,8 @@ val EventScreenBadgeColor = Color(0xFF266668)
 @Composable
 fun EventsScreenPreview() {
     val sampleEvents = listOf(
-        VolEvent("1", "Save Turtle", "Amanah.Co", "12 Jan 2026", "Ipoh", "", ""),
-        VolEvent("2", "Help Homeless", "MyHelper", "12 Jan 2026", "KL", "", ""),
+        VolEvent("1", "Save Turtle", "Amanah.Co", "12 Jan 2026", "08:00 AM", "Ipoh", "", ""),
+        VolEvent("2", "Help Homeless", "MyHelper", "12 Jan 2026", "09:00 PM", "KL", "", ""),
     )
     EventsScreen(
         onBackClick = {},
@@ -44,16 +44,15 @@ fun EventsScreenPreview() {
     )
 }
 
-// ===================== 1. EVENTS SCREEN =====================
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EventsScreen(
     onBackClick: () -> Unit,
-    events: List<VolEvent>, // Changed to VolEvent
+    events: List<VolEvent>,
     onEventClick: (VolEvent) -> Unit
 ) {
     Scaffold(
-        containerColor = Color.White,
+        containerColor = EventScreenPrimaryColor, // Set scaffold color to match background
         topBar = {
             TopAppBar(
                 title = { Text("Events", color = Color.Black, fontWeight = FontWeight.SemiBold) },
@@ -70,33 +69,39 @@ fun EventsScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .background(EventScreenPrimaryColor)
                 .padding(paddingValues),
-            contentPadding = PaddingValues(top = 8.dp, bottom = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            contentPadding = PaddingValues(top = 16.dp, bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp) // Slightly more space for better card breathing
         ) {
-            // Header Badge
             item {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                        .padding(horizontal = 16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(
                         modifier = Modifier
                             .clip(RoundedCornerShape(150.dp))
                             .background(EventScreenBadgeColor)
-                            .padding(horizontal = 30.dp, vertical = 8.dp),
+                            .padding(horizontal = 24.dp, vertical = 10.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Image(
                             painter = painterResource(id = R.drawable.company_logo),
                             contentDescription = null,
-                            modifier = Modifier.size(24.dp).clip(CircleShape).background(Color.White)
+                            modifier = Modifier
+                                .size(24.dp)
+                                .clip(CircleShape)
+                                .background(Color.White)
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Available Events", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            "Available Events",
+                            color = Color.White,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
                     }
                 }
             }
@@ -108,20 +113,18 @@ fun EventsScreen(
     }
 }
 
-// ===================== 2. EVENT CARD EXTENDED =====================
 @Composable
 fun EventCardExtended(event: VolEvent, onClick: () -> Unit) {
     Card(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
             .clickable(onClick = onClick)
     ) {
         Column {
-            // UPDATED: Using AsyncImage for Firebase URL loading
             AsyncImage(
                 model = event.imageUrl,
                 contentDescription = null,
@@ -129,31 +132,60 @@ fun EventCardExtended(event: VolEvent, onClick: () -> Unit) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(180.dp)
-                    .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
                     .background(Color.LightGray)
             )
 
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(EventScreenBadgeColor) // Using badge color for footer
-                    .padding(12.dp)
+                    .background(EventScreenBadgeColor)
+                    .padding(16.dp) // Increased padding for a premium feel
             ) {
-                Text(event.organizer, color = Color.White.copy(alpha = 0.8f), fontSize = 11.sp)
-                Text(event.name, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Text(
+                    text = event.organizer.uppercase(),
+                    color = Color.White.copy(alpha = 0.7f),
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp
+                )
+                Text(
+                    text = event.name,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp
+                )
 
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(10.dp))
 
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
                     Icon(Icons.Default.DateRange, null, Modifier.size(14.dp), Color.White)
-                    Spacer(Modifier.width(4.dp))
-                    Text(event.date, color = Color.White, fontSize = 12.sp)
+                    Spacer(Modifier.width(6.dp))
 
-                    Spacer(Modifier.width(16.dp))
+                    // LOGIC: Show Time only if not empty
+                    val dateTimeText = if (event.time.isNotEmpty()) {
+                        "${event.date} • ${event.time}"
+                    } else {
+                        event.date
+                    }
+
+                    Text(
+                        text = dateTimeText,
+                        color = Color.White,
+                        fontSize = 12.sp
+                    )
+
+                    Spacer(modifier = Modifier.weight(1f)) // Push location to the right
 
                     Icon(Icons.Default.LocationOn, null, Modifier.size(14.dp), Color.White)
                     Spacer(Modifier.width(4.dp))
-                    Text(event.location, color = Color.White, fontSize = 12.sp)
+                    Text(
+                        text = event.location,
+                        color = Color.White,
+                        fontSize = 12.sp
+                    )
                 }
             }
         }

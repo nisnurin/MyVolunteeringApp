@@ -2,8 +2,10 @@ package com.example.ict602my_vol.ui.home
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.* import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,17 +24,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.example.ict602my_vol.PrimaryBackground
 import com.example.ict602my_vol.R
 import com.example.ict602my_vol.data.VolEvent
 import com.example.ict602my_vol.data.Organizer
 
+// Consistency with your Teal design
+val PrimaryBackground = Color(0xFF3ABABE)
 val ArrowColor = Color(0xFF8B8B8B)
 
-// ===================== HEADER =====================
 @Composable
 fun HeaderTitle(title: String) {
     Text(
@@ -43,7 +47,6 @@ fun HeaderTitle(title: String) {
     )
 }
 
-// ===================== SEARCH =====================
 @Composable
 fun SearchBar(textState: String, onTextChange: (String) -> Unit) {
     Surface(
@@ -76,7 +79,6 @@ fun SearchBar(textState: String, onTextChange: (String) -> Unit) {
     }
 }
 
-// ===================== ORGANIZER SECTION =====================
 @Composable
 fun OrganizerSection(organizers: List<Organizer>, onViewAllClick: () -> Unit) {
     Column(modifier = Modifier.fillMaxWidth().background(PrimaryBackground)) {
@@ -94,14 +96,9 @@ fun OrganizerSection(organizers: List<Organizer>, onViewAllClick: () -> Unit) {
             )
         }
 
-        // LATEST FIX: Explicit parameter mapping to satisfy the compiler candidates
         LazyRow(
             modifier = Modifier.fillMaxWidth(),
-            contentPadding = PaddingValues(
-                start = 16.dp,
-                end = 16.dp,
-                bottom = 16.dp
-            ),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             items(organizers) { organizer ->
@@ -125,13 +122,20 @@ fun OrganizerItem(organizer: Organizer) {
                 .size(70.dp)
                 .clip(CircleShape)
                 .background(Color.White)
+                .border(1.dp, Color.White.copy(alpha = 0.3f), CircleShape)
         )
         Spacer(modifier = Modifier.height(4.dp))
-        Text(organizer.title, color = Color.White, fontSize = 12.sp, maxLines = 1)
+        Text(
+            text = organizer.title,
+            color = Color.White,
+            fontSize = 12.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center
+        )
     }
 }
 
-// ===================== EVENT HEADER =====================
 @Composable
 fun EventHeader(onClick: () -> Unit) {
     Row(
@@ -147,7 +151,6 @@ fun EventHeader(onClick: () -> Unit) {
     }
 }
 
-// ===================== EVENT CARD =====================
 @Composable
 fun EventCard(event: VolEvent, onClick: () -> Unit) {
     Card(
@@ -169,20 +172,46 @@ fun EventCard(event: VolEvent, onClick: () -> Unit) {
                     .background(Color.LightGray)
             )
             Column(modifier = Modifier.fillMaxWidth().background(PrimaryBackground).padding(12.dp)) {
-                Text(event.organizer, color = Color.White.copy(alpha = 0.7f), fontSize = 11.sp)
+                Text(event.organizer, color = Color.White.copy(alpha = 0.8f), fontSize = 11.sp)
                 Text(event.name, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
 
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(top = 8.dp)
                 ) {
-                    Icon(Icons.Default.DateRange, contentDescription = null, modifier = Modifier.size(14.dp), tint = Color.White)
-                    Text(" ${event.date}", color = Color.White, fontSize = 12.sp)
+                    Icon(
+                        Icons.Default.DateRange,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp),
+                        tint = Color.White
+                    )
 
-                    Spacer(Modifier.width(16.dp))
+                    // IMPROVED: Logic to show time only if it exists
+                    val displayDateTime = if (event.time.isNotEmpty()) {
+                        " ${event.date} • ${event.time}"
+                    } else {
+                        " ${event.date}"
+                    }
 
-                    Icon(Icons.Default.LocationOn, contentDescription = null, modifier = Modifier.size(14.dp), tint = Color.White)
-                    Text(" ${event.location}", color = Color.White, fontSize = 12.sp)
+                    Text(
+                        text = displayDateTime,
+                        color = Color.White,
+                        fontSize = 12.sp
+                    )
+
+                    Spacer(Modifier.weight(1f)) // Pushes location to the right
+
+                    Icon(
+                        Icons.Default.LocationOn,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp),
+                        tint = Color.White
+                    )
+                    Text(
+                        text = " ${event.location}",
+                        color = Color.White,
+                        fontSize = 12.sp
+                    )
                 }
             }
         }

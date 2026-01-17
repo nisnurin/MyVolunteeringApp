@@ -1,6 +1,5 @@
 package com.example.ict602my_vol
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -21,8 +20,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage // Updated for URL images
-import com.example.ict602my_vol.data.VolEvent // Use the updated central data class
+import coil.compose.AsyncImage
+import com.example.ict602my_vol.data.VolEvent
 import com.example.ict602my_vol.ui.theme.BrandBlue
 import com.example.ict602my_vol.ui.theme.DarkBadge
 
@@ -31,25 +30,27 @@ fun ActivityScreen(
     padding: PaddingValues,
     onNavigateToProfile: () -> Unit
 ) {
-    // UPDATED: Dummy Data using String URLs and the new VolEvent constructor
+    // UPDATED: Dummy Data now includes the 'time' parameter
     val registeredEvents = listOf(
         VolEvent(
             id = "1",
             name = "Amanah.Co",
             organizer = "Save Turtle",
             date = "18 Jan 2026",
+            time = "08:00 AM", // Added time
             location = "Pantai Batu Buruk",
             description = "Protecting turtle nesting sites.",
-            imageUrl = "https://example.com/turtle.jpg" // Replace with a real URL or leave empty
+            imageUrl = "https://example.com/turtle.jpg"
         ),
         VolEvent(
             id = "2",
             name = "Green World",
             organizer = "Mangrove Planting",
             date = "22 Feb 2026",
+            time = "10:30 AM", // Added time
             location = "Setiu Wetlands",
             description = "Restoring the mangrove ecosystem.",
-            imageUrl = "" // Coil handles empty strings gracefully
+            imageUrl = ""
         )
     )
 
@@ -123,7 +124,6 @@ fun ActivityCard(event: VolEvent) {
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column {
-            // UPDATED: Use AsyncImage for URLs
             AsyncImage(
                 model = event.imageUrl,
                 contentDescription = null,
@@ -146,13 +146,29 @@ fun ActivityCard(event: VolEvent) {
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.DateRange, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+                    Icon(
+                        Icons.Default.DateRange,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(16.dp)
+                    )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(text = event.date, color = Color.White, fontSize = 14.sp)
+
+                    // UPDATED: Now displays both Date and Time
+                    Text(
+                        text = "${event.date} • ${event.time}",
+                        color = Color.White,
+                        fontSize = 14.sp
+                    )
                 }
 
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
-                    Icon(Icons.Default.LocationOn, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+                    Icon(
+                        Icons.Default.LocationOn,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(16.dp)
+                    )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(text = event.location, color = Color.White, fontSize = 14.sp)
                 }

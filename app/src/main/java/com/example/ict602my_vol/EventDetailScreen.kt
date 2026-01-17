@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -32,11 +33,10 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.ict602my_vol.data.VolEvent
 
-// ===================== CUSTOM COLORS =====================
+// ===================== YOUR ORIGINAL COLORS =====================
 val PrimaryBackground = Color(0xFF3ABABE)
 val DarkBackground = Color(0xFF267D7D)
 
-// ===================== 1. EVENT DETAIL SCREEN =====================
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EventDetailsScreen(
@@ -66,13 +66,8 @@ fun EventDetailsScreen(
                 .padding(padding)
                 .background(PrimaryBackground)
         ) {
-            // Section 1: Image & Name
             item { EventImageSection(event) }
-
-            // Section 2: Date & Location
             item { EventInfoSection(event, context) }
-
-            // Section 3: Organizer & Description
             item {
                 Column(
                     modifier = Modifier
@@ -97,8 +92,6 @@ fun EventDetailsScreen(
     }
 }
 
-// ===================== 2. UI COMPONENTS =====================
-
 @Composable
 fun EventImageSection(event: VolEvent) {
     Column(
@@ -112,7 +105,6 @@ fun EventImageSection(event: VolEvent) {
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 8.dp)
         ) {
-            // LATEST: Using AsyncImage to load Firebase URL
             AsyncImage(
                 model = event.imageUrl,
                 contentDescription = "Event Image",
@@ -145,12 +137,12 @@ fun EventInfoSection(event: VolEvent, context: Context) {
             .background(PrimaryBackground)
             .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
-        // Date with Calendar Intent
+        // 1. Date Row
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { addEventToCalendar(context, event.name, event.date, event.location) }
+                .clickable { addEventToCalendar(context, event) }
                 .padding(vertical = 8.dp)
         ) {
             Icon(Icons.Default.DateRange, contentDescription = null, tint = Color.White)
@@ -158,7 +150,24 @@ fun EventInfoSection(event: VolEvent, context: Context) {
             Text(text = event.date, color = Color.Black, fontSize = 16.sp)
         }
 
-        // Location with Maps Intent
+        // 2. Time Row
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp)
+        ) {
+            Icon(Icons.Default.Notifications, contentDescription = null, tint = Color.White)
+            Spacer(Modifier.width(12.dp))
+            Text(
+                text = if (event.time.isNotEmpty()) event.time else "TBA",
+                color = Color.Black,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium
+            )
+        }
+
+        // 3. Location Row
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
@@ -207,7 +216,6 @@ fun AboutSection(description: String) {
     ) {
         Text("About", color = Color.Black, fontSize = 18.sp, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(8.dp))
-        // LATEST: Displays real description from Firebase
         Text(
             text = if (description.isNotEmpty()) description else "No additional information provided.",
             color = Color.Black,
@@ -232,38 +240,21 @@ fun RegisterButton(onClick: () -> Unit) {
     }
 }
 
-// ===================== 3. LOGIC FUNCTIONS =====================
+// ===================== LOGIC FUNCTIONS =====================
 
-fun addEventToCalendar(context: Context, title: String, dateString: String, location: String) {
+fun addEventToCalendar(context: Context, event: VolEvent) {
     val intent = Intent(Intent.ACTION_INSERT).apply {
         data = CalendarContract.Events.CONTENT_URI
-        putExtra(CalendarContract.Events.TITLE, title)
-        putExtra(CalendarContract.Events.EVENT_LOCATION, location)
-        putExtra(CalendarContract.Events.DESCRIPTION, "Volunteering for $title")
-        putExtra(CalendarContract.Events.ALL_DAY, true)
+        putExtra(CalendarContract.Events.TITLE, event.name)
+        putExtra(CalendarContract.Events.EVENT_LOCATION, event.location)
+        putExtra(CalendarContract.Events.DESCRIPTION, "Volunteering for ${event.name} at ${event.time}")
+        putExtra(CalendarContract.Events.ALL_DAY, false)
     }
     context.startActivity(intent)
 }
 
 fun openMaps(context: Context, location: String) {
     val uri = Uri.parse("geo:0,0?q=${Uri.encode(location)}")
-    val intent = Intent(Intent.ACTION_VIEW, uri).apply {
-        setPackage("com.google.android.apps.maps")
-    }
+    val intent = Intent(Intent.ACTION_VIEW, uri)
     context.startActivity(intent)
-}
-
-// ===================== 4. PREVIEW =====================
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun EventDetailsScreenPreview() {
-    val dummyEvent = VolEvent(
-        name = "Save Turtle",
-        organizer = "Amanah.Co",
-        date = "18 Jan 2026",
-        location = "Pantai Batu Buruk",
-        description = "Join us for a day of beach cleaning and turtle conservation activities at the beautiful Pantai Batu Buruk.",
-        imageUrl = ""
-    )
-    EventDetailsScreen(event = dummyEvent, onBackClick = {}, onRegisterClick = {})
 }

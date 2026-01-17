@@ -113,10 +113,34 @@ fun EventCard(event: VolEvent, onClick: () -> Unit) {
             Column(modifier = Modifier.background(Color(0xFF3DB7B7)).fillMaxWidth().padding(12.dp)) {
                 Text(text = "Organizer: ${event.organizer}", color = Color.White, fontSize = 11.sp)
                 Text(text = event.name, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+
                 if (event.description.isNotEmpty()) {
-                    Text(text = event.description, color = Color.White.copy(alpha = 0.8f), fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(
+                        text = event.description,
+                        color = Color.White.copy(alpha = 0.8f),
+                        fontSize = 12.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
-                Text(text = "${event.date} | ${event.location}", color = Color.White, fontSize = 13.sp)
+
+                // UPDATED LINE: Added Time display with a small icon
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
+                    Icon(Icons.Default.DateRange, contentDescription = null, tint = Color.White, modifier = Modifier.size(14.dp))
+                    Text(text = " ${event.date}", color = Color.White, fontSize = 12.sp)
+
+                    if (event.time.isNotEmpty()) {
+                        Spacer(modifier = Modifier.width(12.dp))
+                        // Corrected: using explicit numbers for color to match your style
+                        Icon(painter = androidx.compose.ui.res.painterResource(id = android.R.drawable.ic_menu_recent_history), contentDescription = null, tint = Color.White, modifier = Modifier.size(14.dp))
+                        Text(text = " ${event.time}", color = Color.White, fontSize = 12.sp)
+                    }
+                }
+
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 2.dp)) {
+                    Icon(Icons.Default.LocationOn, contentDescription = null, tint = Color.White, modifier = Modifier.size(14.dp))
+                    Text(text = " ${event.location}", color = Color.White, fontSize = 12.sp)
+                }
             }
         }
     }
@@ -125,19 +149,13 @@ fun EventCard(event: VolEvent, onClick: () -> Unit) {
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun ManageEventScreenPreview() {
-    // In a real project, it is better to pass dummy data directly to a
-    // stateless version of this screen to make previews more reliable.
-    // For now, we instantiate the ViewModel.
-
     EventTest3Theme {
-        // We use a dummy instance for the preview
         val mockViewModel: ManageEventViewModel = viewModel()
-
         ManageEventScreen(
             viewModel = mockViewModel,
-            onAddEventClick = { /* Do nothing in preview */ },
-            onEditEventClick = { /* Do nothing in preview */ },
-            onBackClick = { /* Do nothing in preview */ }
+            onAddEventClick = {},
+            onEditEventClick = {},
+            onBackClick = {}
         )
     }
 }
