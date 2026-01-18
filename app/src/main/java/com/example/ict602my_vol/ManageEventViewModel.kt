@@ -6,24 +6,32 @@ import com.example.ict602my_vol.data.VolEvent
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 
+// Ensure RegistrationRecord is accessible
+
+
 class ManageEventViewModel : ViewModel() {
     private val db = FirebaseFirestore.getInstance()
 
     private var eventListener: ListenerRegistration? = null
     private var registrationListener: ListenerRegistration? = null
 
-    // Lists for Events and Registrations
     private val _allEvents = mutableStateListOf<VolEvent>()
     private val _registrations = mutableStateListOf<RegistrationRecord>()
 
-    // Exposed states
     val registrations: List<RegistrationRecord> = _registrations
     var searchQuery by mutableStateOf("")
 
-    // Filtered Events for the Manage Screen
+    /**
+     * UPDATED SEARCH LOGIC:
+     * Filters by both 'name' and 'location' to match the search bar's
+     * expected behavior on the Home and Manage screens.
+     */
     val filteredEvents: List<VolEvent> by derivedStateOf {
         if (searchQuery.isEmpty()) _allEvents
-        else _allEvents.filter { it.name.contains(searchQuery, ignoreCase = true) }
+        else _allEvents.filter {
+            it.name.contains(searchQuery, ignoreCase = true) ||
+                    it.location.contains(searchQuery, ignoreCase = true)
+        }
     }
 
     init {
@@ -33,14 +41,16 @@ class ManageEventViewModel : ViewModel() {
 
     private fun listenToEvents() {
         eventListener = db.collection("events").orderBy("date")
-            .addSnapshotListener { snapshot, _ ->
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) return@addSnapshotListener
                 if (snapshot != null) {
                     _allEvents.clear()
                     for (doc in snapshot.documents) {
                         _allEvents.add(VolEvent(
                             id = doc.id,
                             name = doc.getString("name") ?: "",
-                            organizer = doc.getString("organizer") ?: "",
+                            // Use "Organizer Name" as a fallback for the teal card header
+                            organizer = doc.getString("organizer") ?: "General Organizer",
                             date = doc.getString("date") ?: "",
                             time = doc.getString("time") ?: "",
                             location = doc.getString("location") ?: "",
@@ -52,7 +62,6 @@ class ManageEventViewModel : ViewModel() {
             }
     }
 
-    // --- DETECTION LOGIC ---
     fun listenToRegistrations() {
         registrationListener = db.collection("registrations")
             .addSnapshotListener { snapshot, error ->
@@ -60,13 +69,12 @@ class ManageEventViewModel : ViewModel() {
                 if (snapshot != null) {
                     _registrations.clear()
                     for (doc in snapshot.documents) {
-                        val record = RegistrationRecord(
+                        _registrations.add(RegistrationRecord(
                             id = doc.id,
                             userName = doc.getString("userName") ?: "Unknown",
                             userEmail = doc.getString("userEmail") ?: "",
                             eventName = doc.getString("eventName") ?: "No Event"
-                        )
-                        _registrations.add(record)
+                        ))
                     }
                 }
             }

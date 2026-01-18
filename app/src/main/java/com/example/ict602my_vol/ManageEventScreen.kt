@@ -22,9 +22,10 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.ict602my_vol.data.VolEvent
 
-// Standard Theme Color matches your Dashboard
+// Standard Theme Color from your Home Screen
 val AdminPrimaryColor = Color(0xFF3ABABE)
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ManageEventScreen(
     viewModel: ManageEventViewModel,
@@ -33,111 +34,72 @@ fun ManageEventScreen(
     onReportClick: () -> Unit,
     onBackClick: () -> Unit,
 ) {
-    // Hardware back button returns to Dashboard
     BackHandler { onBackClick() }
 
-    val searchQuery = viewModel.searchQuery
     val eventList = viewModel.filteredEvents
-
     var showActionDialog by remember { mutableStateOf(false) }
     var selectedEvent by remember { mutableStateOf<VolEvent?>(null) }
 
-    Surface(modifier = Modifier.fillMaxSize(), color = Color.White) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Manage Events", fontWeight = FontWeight.Bold) },
+                navigationIcon = {
+                    IconButton(onClick = onBackClick) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = onReportClick) {
+                        Icon(Icons.Default.Assessment, tint = AdminPrimaryColor, modifier = Modifier.size(28.dp), contentDescription = "Reports")
+                    }
+                    IconButton(onClick = onAddEventClick) {
+                        Icon(Icons.Default.AddCircle, tint = AdminPrimaryColor, modifier = Modifier.size(32.dp), contentDescription = "Add Event")
+                    }
+                }
+            )
+        }
+    ) { padding ->
         Column(
             modifier = Modifier
+                .padding(padding)
                 .fillMaxSize()
-                .windowInsetsPadding(WindowInsets.systemBars)
-                .padding(16.dp)
+                .background(Color.White)
         ) {
-            // --- TOP BAR ---
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                IconButton(onClick = onBackClick) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                }
-                Text(
-                    text = "Manage Events",
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.ExtraBold
-                )
-
-                Spacer(modifier = Modifier.weight(1f))
-
-                // REPORT BUTTON
-                IconButton(onClick = onReportClick) {
-                    Icon(
-                        imageVector = Icons.Default.Assessment,
-                        tint = AdminPrimaryColor,
-                        modifier = Modifier.size(28.dp),
-                        contentDescription = "Reports"
-                    )
-                }
-
-                // ADD BUTTON
-                IconButton(onClick = onAddEventClick) {
-                    Icon(
-                        imageVector = Icons.Default.AddCircle,
-                        tint = AdminPrimaryColor,
-                        modifier = Modifier.size(32.dp),
-                        contentDescription = "Add Event"
-                    )
-                }
-            }
-
-            // --- SEARCH BAR ---
+            // Search Bar matching Home Screen style
             OutlinedTextField(
-                value = searchQuery,
+                value = viewModel.searchQuery,
                 onValueChange = { viewModel.searchQuery = it },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 16.dp),
+                    .padding(16.dp),
                 placeholder = { Text("Search events...") },
                 leadingIcon = { Icon(Icons.Default.Search, null) },
-                trailingIcon = {
-                    if (searchQuery.isNotEmpty()) {
-                        IconButton(onClick = { viewModel.searchQuery = "" }) {
-                            Icon(Icons.Default.Close, contentDescription = "Clear")
-                        }
-                    }
-                },
                 shape = RoundedCornerShape(28.dp),
-                singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
                     unfocusedContainerColor = Color(0xFFF5F5F5),
                     focusedContainerColor = Color(0xFFF5F5F5),
-                    unfocusedBorderColor = Color.Transparent,
-                    focusedBorderColor = AdminPrimaryColor.copy(alpha = 0.5f)
+                    unfocusedBorderColor = Color.Transparent
                 )
             )
 
-            // --- REAL-TIME EVENT LIST ---
-            if (eventList.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(
-                        text = if (searchQuery.isEmpty()) "No events found in Firestore" else "No results for \"$searchQuery\"",
-                        color = Color.Gray
-                    )
-                }
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    contentPadding = PaddingValues(bottom = 24.dp)
-                ) {
-                    items(eventList) { event ->
-                        AdminEventCard(event = event, onClick = {
-                            selectedEvent = event
-                            showActionDialog = true
-                        })
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(bottom = 24.dp)
+            ) {
+                // Using the exact items logic from Home Screen
+                items(eventList) { event ->
+                    // This EventCard is coded exactly like the Home Screen version
+                    EventCard(event) {
+                        selectedEvent = event
+                        showActionDialog = true
                     }
                 }
             }
         }
     }
 
-    // --- ACTION DIALOG (Edit/Delete) ---
+    // Admin Action Dialog
     if (showActionDialog && selectedEvent != null) {
         AlertDialog(
             onDismissRequest = { showActionDialog = false },
@@ -162,48 +124,77 @@ fun ManageEventScreen(
     }
 }
 
+/**
+ * EXACT SAME CODE USED IN HOME SCREEN
+ */
 @Composable
-fun AdminEventCard(event: VolEvent, onClick: () -> Unit) {
+fun EventCard(event: VolEvent, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
             .clickable { onClick() },
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(20.dp),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Column {
+            // Top Image
             AsyncImage(
                 model = event.imageUrl,
                 contentDescription = null,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(140.dp)
+                    .height(180.dp)
                     .background(Color.LightGray),
                 contentScale = ContentScale.Crop
             )
+
+            // Bottom Teal Block (Matching Home Screen exactly)
             Column(
                 modifier = Modifier
                     .background(AdminPrimaryColor)
                     .fillMaxWidth()
-                    .padding(12.dp)
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
-                    text = event.name.uppercase(),
+                    text = event.organizer.ifEmpty { "organizer name" },
+                    color = Color.White.copy(alpha = 0.8f),
+                    fontSize = 14.sp
+                )
+
+                Text(
+                    text = event.name,
                     color = Color.White,
-                    fontSize = 18.sp,
+                    fontSize = 22.sp,
                     fontWeight = FontWeight.Bold
                 )
-                Spacer(modifier = Modifier.height(4.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.LocationOn,
-                        contentDescription = null,
-                        modifier = Modifier.size(14.dp),
-                        tint = Color.White
-                    )
-                    Text(" ${event.location}", color = Color.White, fontSize = 12.sp)
-                }
+
+                // The 3 info rows
+                EventMetadataRow(Icons.Default.CalendarToday, event.date)
+                EventMetadataRow(Icons.Default.AccessTime, event.time)
+                EventMetadataRow(Icons.Default.LocationOn, event.location)
             }
         }
+    }
+}
+
+@Composable
+fun EventMetadataRow(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            modifier = Modifier.size(16.dp),
+            tint = Color.White
+        )
+        Text(
+            text = text,
+            color = Color.White,
+            fontSize = 14.sp
+        )
     }
 }
