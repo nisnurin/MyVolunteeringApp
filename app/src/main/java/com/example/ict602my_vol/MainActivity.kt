@@ -7,6 +7,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -14,6 +15,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ict602my_vol.data.RegistrationData
 import com.example.ict602my_vol.ui.BottomNavigationBar
@@ -123,6 +125,15 @@ class MainActivity : ComponentActivity() {
             "AdminDashboard" -> AdminDashboardScreen(
                 onManageEventClick = { currentScreen = "ManageEvent" },
                 onViewReportClick = { currentScreen = "Report" },
+                onProfileClick = { currentScreen = "AdminProfile" },
+                onLogout = {
+                    auth.signOut()
+                    currentScreen = "Welcome"
+                }
+            )
+
+            "AdminProfile" -> AdminProfileScreen(
+                onHomeClick = { currentScreen = "AdminDashboard" },
                 onLogout = {
                     auth.signOut()
                     currentScreen = "Welcome"
