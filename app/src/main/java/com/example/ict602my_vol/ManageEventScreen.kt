@@ -1,7 +1,8 @@
 package com.example.ict602my_vol
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -15,17 +16,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.ict602my_vol.data.VolEvent
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.ict602my_vol.ui.theme.EventTest3Theme
 
-// Match the color exactly to your other screens
+// Standard Theme Color matches your Dashboard
 val AdminPrimaryColor = Color(0xFF3ABABE)
 
 @Composable
@@ -33,81 +30,134 @@ fun ManageEventScreen(
     viewModel: ManageEventViewModel,
     onAddEventClick: () -> Unit,
     onEditEventClick: (VolEvent) -> Unit,
+    onReportClick: () -> Unit,
     onBackClick: () -> Unit,
 ) {
+    // Hardware back button returns to Dashboard
     BackHandler { onBackClick() }
-    var showDialog by remember { mutableStateOf(false) }
+
+    val searchQuery = viewModel.searchQuery
+    val eventList = viewModel.filteredEvents
+
+    var showActionDialog by remember { mutableStateOf(false) }
     var selectedEvent by remember { mutableStateOf<VolEvent?>(null) }
 
-    Column(modifier = Modifier.fillMaxSize().background(Color.White).padding(16.dp)) {
-        // TOP BAR SECTION
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onBackClick) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-            }
-            Text("Manage Event", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.weight(1f))
-            IconButton(onClick = onAddEventClick) {
-                Icon(
-                    Icons.Default.AddCircle,
-                    tint = AdminPrimaryColor,
-                    modifier = Modifier.size(36.dp),
-                    contentDescription = "Add Event"
-                )
-            }
-        }
-
-        // SEARCH BAR SECTION
-        OutlinedTextField(
-            value = viewModel.searchQuery,
-            onValueChange = { viewModel.searchQuery = it },
-            modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
-            placeholder = { Text("Search events...") },
-            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-            shape = RoundedCornerShape(28.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = Color(0xFFF1F1F1),
-                unfocusedContainerColor = Color(0xFFF1F1F1),
-                unfocusedBorderColor = Color.Transparent
-            )
-        )
-
-        // EVENTS LIST
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(bottom = 24.dp)
+    Surface(modifier = Modifier.fillMaxSize(), color = Color.White) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .windowInsetsPadding(WindowInsets.systemBars)
+                .padding(16.dp)
         ) {
-            items(viewModel.filteredEvents) { event ->
-                AdminEventCard(event = event, onClick = {
-                    selectedEvent = event
-                    showDialog = true
-                })
+            // --- TOP BAR ---
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                IconButton(onClick = onBackClick) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                }
+                Text(
+                    text = "Manage Events",
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.ExtraBold
+                )
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                // REPORT BUTTON
+                IconButton(onClick = onReportClick) {
+                    Icon(
+                        imageVector = Icons.Default.Assessment,
+                        tint = AdminPrimaryColor,
+                        modifier = Modifier.size(28.dp),
+                        contentDescription = "Reports"
+                    )
+                }
+
+                // ADD BUTTON
+                IconButton(onClick = onAddEventClick) {
+                    Icon(
+                        imageVector = Icons.Default.AddCircle,
+                        tint = AdminPrimaryColor,
+                        modifier = Modifier.size(32.dp),
+                        contentDescription = "Add Event"
+                    )
+                }
+            }
+
+            // --- SEARCH BAR ---
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { viewModel.searchQuery = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp),
+                placeholder = { Text("Search events...") },
+                leadingIcon = { Icon(Icons.Default.Search, null) },
+                trailingIcon = {
+                    if (searchQuery.isNotEmpty()) {
+                        IconButton(onClick = { viewModel.searchQuery = "" }) {
+                            Icon(Icons.Default.Close, contentDescription = "Clear")
+                        }
+                    }
+                },
+                shape = RoundedCornerShape(28.dp),
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    unfocusedContainerColor = Color(0xFFF5F5F5),
+                    focusedContainerColor = Color(0xFFF5F5F5),
+                    unfocusedBorderColor = Color.Transparent,
+                    focusedBorderColor = AdminPrimaryColor.copy(alpha = 0.5f)
+                )
+            )
+
+            // --- REAL-TIME EVENT LIST ---
+            if (eventList.isEmpty()) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(
+                        text = if (searchQuery.isEmpty()) "No events found in Firestore" else "No results for \"$searchQuery\"",
+                        color = Color.Gray
+                    )
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    contentPadding = PaddingValues(bottom = 24.dp)
+                ) {
+                    items(eventList) { event ->
+                        AdminEventCard(event = event, onClick = {
+                            selectedEvent = event
+                            showActionDialog = true
+                        })
+                    }
+                }
             }
         }
     }
 
-    // ACTION DIALOG (EDIT/DELETE)
-    if (showDialog && selectedEvent != null) {
+    // --- ACTION DIALOG (Edit/Delete) ---
+    if (showActionDialog && selectedEvent != null) {
         AlertDialog(
-            onDismissRequest = { showDialog = false },
-            title = { Text("Actions for ${selectedEvent?.name}") },
-            text = {
-                Column {
-                    Button(
-                        onClick = { onEditEventClick(selectedEvent!!); showDialog = false },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = AdminPrimaryColor)
-                    ) { Text("Edit Event") }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Button(
-                        onClick = { viewModel.deleteEvent(selectedEvent!!); showDialog = false },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
-                    ) { Text("Delete Event") }
-                }
+            onDismissRequest = { showActionDialog = false },
+            title = { Text("Event Actions") },
+            text = { Text("Choose an action for ${selectedEvent?.name}") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onEditEventClick(selectedEvent!!)
+                        showActionDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = AdminPrimaryColor)
+                ) { Text("Edit") }
             },
-            confirmButton = { TextButton(onClick = { showDialog = false }) { Text("Cancel") } }
+            dismissButton = {
+                TextButton(onClick = {
+                    viewModel.deleteEvent(selectedEvent!!)
+                    showActionDialog = false
+                }) { Text("Delete", color = Color.Red) }
+            }
         )
     }
 }
@@ -115,7 +165,9 @@ fun ManageEventScreen(
 @Composable
 fun AdminEventCard(event: VolEvent, onClick: () -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth().clickable { onClick() },
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
@@ -123,58 +175,35 @@ fun AdminEventCard(event: VolEvent, onClick: () -> Unit) {
             AsyncImage(
                 model = event.imageUrl,
                 contentDescription = null,
-                modifier = Modifier.fillMaxWidth().height(140.dp).background(Color.LightGray),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(140.dp)
+                    .background(Color.LightGray),
                 contentScale = ContentScale.Crop
             )
-            Column(modifier = Modifier.background(AdminPrimaryColor).fillMaxWidth().padding(12.dp)) {
-                Text(text = "Organizer: ${event.organizer}", color = Color.White.copy(alpha = 0.8f), fontSize = 11.sp)
-                Text(text = event.name, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-
-                // COMPACT STACKED INFO SECTION
-                Column(
-                    modifier = Modifier.padding(top = 4.dp),
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
-                ) {
-                    // Line 1: Date
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.DateRange, null, Modifier.size(13.dp), Color.White)
-                        Text(text = " ${event.date}", color = Color.White, fontSize = 12.sp)
-                    }
-
-                    // Line 2: Time
-                    if (event.time.isNotEmpty()) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                painter = painterResource(id = android.R.drawable.ic_menu_recent_history),
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(13.dp)
-                            )
-                            Text(text = " ${event.time}", color = Color.White, fontSize = 12.sp)
-                        }
-                    }
-
-                    // Line 3: Location
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.LocationOn, null, Modifier.size(13.dp), Color.White)
-                        Text(text = " ${event.location}", color = Color.White, fontSize = 12.sp)
-                    }
+            Column(
+                modifier = Modifier
+                    .background(AdminPrimaryColor)
+                    .fillMaxWidth()
+                    .padding(12.dp)
+            ) {
+                Text(
+                    text = event.name.uppercase(),
+                    color = Color.White,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.LocationOn,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp),
+                        tint = Color.White
+                    )
+                    Text(" ${event.location}", color = Color.White, fontSize = 12.sp)
                 }
             }
         }
-    }
-}
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun ManageEventScreenPreview() {
-    EventTest3Theme {
-        val mockViewModel: ManageEventViewModel = viewModel()
-        ManageEventScreen(
-            viewModel = mockViewModel,
-            onAddEventClick = {},
-            onEditEventClick = {},
-            onBackClick = {}
-        )
     }
 }
