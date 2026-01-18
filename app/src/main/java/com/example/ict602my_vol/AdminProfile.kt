@@ -9,7 +9,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.Home
@@ -132,16 +131,21 @@ fun AdminProfileScreen(onHomeClick: () -> Unit, onLogout: () -> Unit) {
             Spacer(modifier = Modifier.height(15.dp))
 
             // Profile Image Container
-            Box(contentAlignment = Alignment.BottomCenter) {
+            Surface(
+                modifier = Modifier.size(110.dp),
+                shape = CircleShape,
+                border = BorderStroke(2.dp, Color.White),
+                color = Color.White
+            ) {
                 if (selectedImageUri != null) {
                     // Displays the selected image from URI (using Coil)
                     AsyncImage(
                         model = selectedImageUri,
                         contentDescription = "Profile Picture",
                         modifier = Modifier
-                            .size(110.dp)
+                            .fillMaxSize()
                             .clip(CircleShape)
-                            .border(2.dp, Color.White, CircleShape),
+                            .clickable { photoPickerLauncher.launch("image/*") },
                         contentScale = ContentScale.Crop
                     )
                 } else {
@@ -150,38 +154,34 @@ fun AdminProfileScreen(onHomeClick: () -> Unit, onLogout: () -> Unit) {
                         painter = painterResource(id = R.drawable.location_pic),
                         contentDescription = "Default Profile",
                         modifier = Modifier
-                            .size(110.dp)
+                            .fillMaxSize()
                             .clip(CircleShape)
-                            .border(2.dp, Color.White, CircleShape),
+                            .clickable { photoPickerLauncher.launch("image/*") },
                         contentScale = ContentScale.Crop
                     )
                 }
-
-                // Change Profile Button - Triggers Photo Picker
-                Surface(
-                    color = Color.Black,
-                    shape = RoundedCornerShape(20.dp),
-                    modifier = Modifier
-                        .offset(y = 15.dp)
-                        .clickable { photoPickerLauncher.launch("image/*") } // Launch picker
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text("Change Profile", color = Color.White, fontSize = 11.sp)
-                        Spacer(Modifier.width(6.dp))
-                        Icon(
-                            Icons.Default.FileUpload,
-                            null,
-                            tint = Color.White,
-                            modifier = Modifier.size(14.dp)
-                        )
-                    }
-                }
             }
 
-            Spacer(modifier = Modifier.height(35.dp))
+            Spacer(modifier = Modifier.height(15.dp))
+
+            // Change Profile Button - Matches ProfileScreen.kt style
+            Button(
+                onClick = { photoPickerLauncher.launch("image/*") },
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
+                shape = RoundedCornerShape(12.dp),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+            ) {
+                Icon(
+                    Icons.Default.FileUpload,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                    tint = Color.White
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(text = "Change Profile", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
+            }
+
+            Spacer(modifier = Modifier.height(25.dp))
             Text("Volunteer Platform For All Community", color = Color.Black, fontSize = 14.sp)
             Text(
                 "#VolunteerForAll",
@@ -203,13 +203,6 @@ fun AdminProfileScreen(onHomeClick: () -> Unit, onLogout: () -> Unit) {
                     color = tealColor,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp
-                )
-                Spacer(Modifier.width(8.dp))
-                Icon(
-                    imageVector = Icons.Default.Edit,
-                    contentDescription = "Edit",
-                    modifier = Modifier.size(22.dp),
-                    tint = Color.Black
                 )
             }
 
