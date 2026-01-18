@@ -92,9 +92,6 @@ class UserViewModel : ViewModel() {
                     }
                     
                     if (!vGender.isNullOrEmpty()) userGender = vGender
-
-                    // Simple check for registered events
-                    registeredEventsCount = if (volunteerDoc.contains("eventName")) 1 else 0
                 } else {
                     // Step 2: Not in 'volunteers', check 'users' (for admins or basic users)
                     db.collection("users").document(user.uid).get()
@@ -122,13 +119,27 @@ class UserViewModel : ViewModel() {
 
     fun fetchEventStats() {
         val db = Firebase.firestore
-        db.collection("events").get()
-            .addOnSuccessListener { result ->
-                availableEventsCount = result.size()
+        
+        // 1. Available Events
+        db.collection("events").addSnapshotListener { snapshot, _ ->
+            if (snapshot != null) {
+                availableEventsCount = snapshot.size()
             }
-            .addOnFailureListener {
-                availableEventsCount = 0
-            }
+        }
+
+        // 2. Registered Events (Real-time count)
+        val user = Firebase.auth.currentUser
+        if (user != null && user.email != null) {
+            db.collection("registrations")
+                .whereEqualTo("userEmail", user.email)
+                .addSnapshotListener { snapshot, _ ->
+                    if (snapshot != null) {
+                        registeredEventsCount = snapshot.size()
+                    }
+                }
+        } else {
+            registeredEventsCount = 0
+        }
     }
 
     fun updateUserProfile(newName: String, newNationality: String, newAbout: String, onResult: (Boolean) -> Unit) {
