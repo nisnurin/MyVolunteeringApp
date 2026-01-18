@@ -28,6 +28,10 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.example.ict602my_vol.UserViewModel
 import com.example.ict602my_vol.data.VolEvent
+// ... (Your existing imports remain the same)
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+
 
 class MainActivity : ComponentActivity() {
 
@@ -74,18 +78,36 @@ class MainActivity : ComponentActivity() {
             "Welcome" -> WelcomeScreen(onGetStarted = { currentScreen = "Main" })
 
             "Main" -> MainScreen(
-                onSignUpSuccess = { currentScreen = "Home" },
-                onNavigateToLogin = { currentScreen = "AdminLogin" }, // Goes to Admin Login by default
+                onSignUpSuccess = {
+                    if (loginRole == "Admin") {
+                        currentScreen = "AdminDashboard"
+                    } else {
+                        currentScreen = "Home"
+                    }
+                },
+                onNavigateToLogin = { role ->
+                    loginRole = role
+                    currentScreen = if (role == "Admin") "AdminLogin" else "VolunteerLogin"
+                },
                 onGoogleClick = { signInWithGoogle() }
             )
-
+            "VolunteerLogin" -> LoginScreen(
+                onLoginSuccess = {
+                    loginRole = "Volunteer"
+                    currentScreen = "Home"
+                },
+                onBackToSignUp = {
+                    currentScreen = "Main"
+                }
+            )
             // --- ADMIN AUTH SECTION ---
             "AdminLogin" -> AdminLoginScreen(
                 onLoginSuccess = {
                     loginRole = "Admin"
                     currentScreen = "AdminDashboard"
                 },
-                onNavigateToSignUp = { currentScreen = "AdminSignUp" }
+                onNavigateToSignUp = {
+                    currentScreen = "Main" }
             )
 
             "AdminSignUp" -> AdminScreen( // This is your Admin signup screen

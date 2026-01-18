@@ -88,7 +88,8 @@ fun AdminScreen(
         Button(
             onClick = {
                 if (name.isNotEmpty() && email.isNotEmpty() && nationality.isNotEmpty() && phoneNumber.isNotEmpty() && password.isNotEmpty()) {
-                    auth.signInAnonymously().addOnCompleteListener { task ->
+                auth.createUserWithEmailAndPassword(email.trim(), password.trim())
+                    .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
                             val userId = auth.currentUser?.uid
                             if (userId != null) {
@@ -106,6 +107,9 @@ fun AdminScreen(
                                         onContinueSuccess()
                                     }
                             }
+                        }
+                        else {
+                            Toast.makeText(context, "Error: ${task.exception?.message}", Toast.LENGTH_LONG).show()
                         }
                     }
                 } else {
