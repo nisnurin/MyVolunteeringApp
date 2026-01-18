@@ -92,7 +92,7 @@ fun AdminScreen(
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
                             val userId = auth.currentUser?.uid
-                            if (userId != null) {
+                            if (userId != null){
                                 val adminData = hashMapOf(
                                     "fullName" to name,
                                     "nationality" to nationality,

@@ -107,7 +107,7 @@ class MainActivity : ComponentActivity() {
                     currentScreen = "AdminDashboard"
                 },
                 onNavigateToSignUp = {
-                    currentScreen = "Main" }
+                    currentScreen = "AdminSignUp" }
             )
 
             "AdminSignUp" -> AdminScreen( // This is your Admin signup screen
