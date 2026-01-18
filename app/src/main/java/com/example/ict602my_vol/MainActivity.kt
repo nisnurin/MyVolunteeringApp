@@ -27,8 +27,6 @@ import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.example.ict602my_vol.UserViewModel
-
-// Standardizing the alias to match the HomeComponents/HomeScreen logic
 import com.example.ict602my_vol.data.VolEvent
 
 class MainActivity : ComponentActivity() {
@@ -65,59 +63,52 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     fun AppRoot() {
-        // Shared ViewModel for all screens
         val manageEventViewModel: ManageEventViewModel = viewModel()
         var currentScreen by remember { mutableStateOf("Welcome") }
         var selectedEventForEdit by remember { mutableStateOf<VolEvent?>(null) }
         var loginRole by remember { mutableStateOf("Volunteer") }
 
+
+
         when (currentScreen) {
             "Welcome" -> WelcomeScreen(onGetStarted = { currentScreen = "Main" })
+
             "Main" -> MainScreen(
                 onSignUpSuccess = { currentScreen = "Home" },
-                onNavigateToLogin = { currentScreen = "LoginChoice" },
+                onNavigateToLogin = { currentScreen = "AdminLogin" }, // Goes to Admin Login by default
                 onGoogleClick = { signInWithGoogle() }
             )
-            "LoginChoice" -> {
-                if (loginRole == "Admin") {
-                    AdminLoginScreen(
-                        onLoginSuccess = {
-                            loginRole = "Admin"
-                            currentScreen = "AdminDashboard"
-                        },
-                        onNavigateToSignUp = { currentScreen = "Main" }
-                    )
-                } else {
-                    LoginScreen(
-                        onLoginSuccess = { currentScreen = "Home" },
-                        onBackToSignUp = { currentScreen = "Main" }
-                    )
-                }
-            }
 
-            "AdminDashboard" -> AdminDashboardScreen(
-                onManageEventClick = { currentScreen = "ManageEvent" },
-                onViewReportClick = {
-                    Toast.makeText(this@MainActivity, "Opening Reports...", Toast.LENGTH_SHORT).show()
+            // --- ADMIN AUTH SECTION ---
+            "AdminLogin" -> AdminLoginScreen(
+                onLoginSuccess = {
+                    loginRole = "Admin"
+                    currentScreen = "AdminDashboard"
                 },
-                onLogout = { currentScreen = "Welcome" }
+                onNavigateToSignUp = { currentScreen = "AdminSignUp" }
             )
 
-            "Home" -> HomePage(
-                manageEventViewModel = manageEventViewModel, // Pass shared VM
-                onManageClick = { currentScreen = "ManageEvent" },
+            "AdminSignUp" -> AdminScreen( // This is your Admin signup screen
+                onContinueSuccess = {
+                    loginRole = "Admin"
+                    currentScreen = "AdminDashboard"
+                },
+                onNavigateToLogin = { currentScreen = "AdminLogin" },
+                onGoogleClick = { signInWithGoogle() }
+            )
+
+            // --- ADMIN MAIN SECTION ---
+            "AdminDashboard" -> AdminDashboardScreen(
+                onManageEventClick = { currentScreen = "ManageEvent" },
+                onViewReportClick = { currentScreen = "Report" },
                 onLogout = {
                     auth.signOut()
-                    googleSignInClient.signOut()
                     currentScreen = "Welcome"
                 }
             )
 
             "ManageEvent" -> ManageEventScreen(
                 viewModel = manageEventViewModel,
-                onBackClick = {
-                    currentScreen = if (loginRole == "Admin") "AdminDashboard" else "Home"
-                },
                 onAddEventClick = {
                     selectedEventForEdit = null
                     currentScreen = "AddEvent"
@@ -125,16 +116,35 @@ class MainActivity : ComponentActivity() {
                 onEditEventClick = { event ->
                     selectedEventForEdit = event
                     currentScreen = "AddEvent"
-                }
+                },
+                onReportClick = { currentScreen = "Report" },
+                onBackClick = { currentScreen = "AdminDashboard" }
             )
 
             "AddEvent" -> AddEventScreen(
                 onNavigateBack = { currentScreen = "ManageEvent" },
                 eventToEdit = selectedEventForEdit
             )
+
+            "Report" -> ReportScreen(
+                viewModel = manageEventViewModel,
+                onBackClick = { currentScreen = "ManageEvent" }
+            )
+
+            // --- VOLUNTEER SECTION ---
+            "Home" -> HomePage(
+                manageEventViewModel = manageEventViewModel,
+                onManageClick = { /* Admins only, but kept for logic */ },
+                onLogout = {
+                    auth.signOut()
+                    googleSignInClient.signOut()
+                    currentScreen = "Welcome"
+                }
+            )
         }
     }
 
+    // ... [Keep your existing HomePage and onActivityResult code exactly as they were]
     @Composable
     fun HomePage(
         manageEventViewModel: ManageEventViewModel,
@@ -159,7 +169,7 @@ class MainActivity : ComponentActivity() {
                 when (selectedTab) {
                     0 -> HomeScreen(
                         paddingValues = innerPadding,
-                        viewModel = manageEventViewModel, // Pass VM to HomeScreen
+                        viewModel = manageEventViewModel,
                         onRegisterClick = { event ->
                             selectedEventForRegistration = event
                             currentSubScreen = "Register"
@@ -178,7 +188,6 @@ class MainActivity : ComponentActivity() {
                     3 -> ActivityScreen(padding = innerPadding, onNavigateToProfile = { selectedTab = 2 })
                 }
 
-                // Sub-screens for Registration Flow
                 if (currentSubScreen != "Main") {
                     Surface(modifier = Modifier.fillMaxSize(), color = Color.White) {
                         when (currentSubScreen) {
