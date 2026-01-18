@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -30,17 +31,22 @@ import com.google.firebase.auth.FirebaseAuth
 fun ActivityScreen(
     padding: PaddingValues,
     viewModel: ManageEventViewModel,
-    onNavigateToProfile: () -> Unit
+    onNavigateToProfile: () -> Unit,
+    onLogout: () -> Unit
 ) {
     val auth = FirebaseAuth.getInstance()
     val currentUserEmail = auth.currentUser?.email
 
-    val registeredEventIds = viewModel.registrations
-        .filter { it.userEmail == currentUserEmail }
-        .map { it.eventId }
+    // Filter registrations for current user
+    val myRegistrations = viewModel.registrations.filter { it.userEmail == currentUserEmail }
 
-    val registeredEvents = viewModel.allEvents.filter {
-        it.id in registeredEventIds
+    // Get IDs and Names for robust matching
+    val myEventIds = myRegistrations.map { it.eventId }.filter { it.isNotEmpty() }.toSet()
+    val myEventNames = myRegistrations.map { it.eventName }.toSet()
+
+    // Filter events: Match by ID OR by Name (fallback for legacy data)
+    val registeredEvents = viewModel.allEvents.filter { event ->
+        event.id in myEventIds || event.name in myEventNames
     }
 
     Column(
@@ -50,6 +56,24 @@ fun ActivityScreen(
             .background(BrandBlue),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // --- TOP BAR WITH LOGOUT ---
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+        ) {
+            IconButton(
+                onClick = onLogout,
+                modifier = Modifier.align(Alignment.CenterEnd)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.ExitToApp,
+                    contentDescription = "Logout",
+                    tint = Color.Red
+                )
+            }
+        }
+
         ActivityToggle(onNavigateToProfile)
 
         LazyColumn(

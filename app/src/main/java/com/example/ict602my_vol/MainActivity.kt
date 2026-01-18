@@ -221,7 +221,8 @@ class MainActivity : ComponentActivity() {
                     3 -> ActivityScreen(
                         padding = innerPadding,
                         viewModel = manageEventViewModel,
-                        onNavigateToProfile = { selectedTab = 2 }
+                        onNavigateToProfile = { selectedTab = 2 },
+                        onLogout = onLogout
                     )
                 }
 
