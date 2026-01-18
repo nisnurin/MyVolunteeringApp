@@ -115,7 +115,12 @@ fun AdminProfileScreen(padding: PaddingValues) {
 
             Spacer(modifier = Modifier.height(35.dp))
             Text("Volunteer Platform For All Community", color = Color.Black, fontSize = 14.sp)
-            Text("#VolunteerForAll", color = Color.Black, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+            Text(
+                "#VolunteerForAll",
+                color = Color.Black,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold
+            )
         }
 
         // --- ABOUT SECTION ---
@@ -158,15 +163,6 @@ fun AdminProfileScreen(padding: PaddingValues) {
             }
 
             Spacer(modifier = Modifier.height(30.dp))
-
-//            Button(
-//                onClick = { /* Navigate to List */ },
-//                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF333333)),
-//                shape = RoundedCornerShape(8.dp),
-//                modifier = Modifier.align(Alignment.CenterHorizontally).width(160.dp)
-//            ) {
-//                Text("List of Event", color = Color.White)
-//            }
         }
     }
 }
@@ -174,7 +170,12 @@ fun AdminProfileScreen(padding: PaddingValues) {
 @Composable
 fun AdminFieldItem(label: String, value: String) {
     Column(modifier = Modifier.fillMaxWidth()) {
-        Text(text = label, color = Color.Black, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+        Text(
+            text = label,
+            color = Color.Black,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Medium
+        )
         Spacer(Modifier.height(4.dp))
         Surface(
             color = Color.White,
