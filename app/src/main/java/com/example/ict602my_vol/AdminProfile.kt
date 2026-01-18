@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -27,7 +28,7 @@ import coil.compose.AsyncImage // You may need to add this implementation to bui
 import com.example.ict602my_vol.ui.theme.EventTest3Theme
 
 @Composable
-fun AdminProfileScreen(padding: PaddingValues) {
+fun AdminProfileScreen(padding: PaddingValues, onLogout: () -> Unit) {
     val tealColor = Color(0xFF4DB6AC)
 
     // State to store the selected image Uri
@@ -46,6 +47,24 @@ fun AdminProfileScreen(padding: PaddingValues) {
             .padding(padding)
             .background(Color.White)
     ) {
+        // --- TOP BAR WITH LOGOUT ---
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+        ) {
+            IconButton(
+                onClick = onLogout,
+                modifier = Modifier.align(Alignment.CenterEnd)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.ExitToApp,
+                    contentDescription = "Logout",
+                    tint = Color.Red
+                )
+            }
+        }
+
         // --- TEAL HEADER SECTION ---
         Column(
             modifier = Modifier
@@ -191,6 +210,6 @@ fun AdminFieldItem(label: String, value: String) {
 @Composable
 fun AdminProfilePreview() {
     EventTest3Theme {
-        AdminProfileScreen(padding = PaddingValues(0.dp))
+        AdminProfileScreen(padding = PaddingValues(0.dp), onLogout = {})
     }
 }
