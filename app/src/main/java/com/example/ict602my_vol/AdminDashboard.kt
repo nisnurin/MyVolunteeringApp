@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,6 +24,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 fun AdminDashboardScreen(
     onManageEventClick: () -> Unit,
     onViewReportClick: () -> Unit,
+    onProfileClick: () -> Unit,
     onLogout: () -> Unit
 ) {
     val tealColor = Color(0xFF4DB6AC)
@@ -68,12 +68,7 @@ fun AdminDashboardScreen(
                 )
                 NavigationBarItem(
                     selected = false,
-                    onClick = { },
-                    icon = { Icon(Icons.Outlined.Notifications, contentDescription = null) }
-                )
-                NavigationBarItem(
-                    selected = false,
-                    onClick = onLogout,
+                    onClick = onProfileClick,
                     icon = { Icon(Icons.Default.Person, contentDescription = "Profile") }
                 )
             }
@@ -86,14 +81,7 @@ fun AdminDashboardScreen(
                 .padding(horizontal = 24.dp, vertical = 20.dp)
         ) {
             // Header Section
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(text = "Admin Dashboard", fontSize = 28.sp, fontWeight = FontWeight.Bold)
-                Icon(Icons.Outlined.Notifications, contentDescription = "Notifications")
-            }
+            Text(text = "Admin Dashboard", fontSize = 28.sp, fontWeight = FontWeight.Bold)
 
             Spacer(modifier = Modifier.height(12.dp))
             Text(text = "Overview", fontSize = 16.sp, color = Color.Black)
@@ -182,6 +170,7 @@ fun AdminDashboardPreview() {
         AdminDashboardScreen(
             onManageEventClick = { /* No-op for preview */ },
             onViewReportClick = { /* No-op for preview */ },
+            onProfileClick = { /* No-op for preview */ },
             onLogout = { /* No-op for preview */ }
         )
     }

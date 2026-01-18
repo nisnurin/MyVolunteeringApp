@@ -4,10 +4,11 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -22,10 +23,55 @@ import com.example.ict602my_vol.UserViewModel
 // Import your custom colors
 import com.example.ict602my_vol.ui.theme.BrandBlue
 import com.example.ict602my_vol.ui.theme.DarkBadge
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.Timestamp
+import java.text.SimpleDateFormat
+import java.util.Locale
+import java.util.Date
+
+data class NotificationItemData(
+    val id: String,
+    val title: String,
+    val message: String,
+    val timestamp: Timestamp
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationScreen(padding: PaddingValues, userViewModel: UserViewModel) {
+    val auth = FirebaseAuth.getInstance()
+    val db = FirebaseFirestore.getInstance()
+    val currentUser = auth.currentUser
+
+    var notifications by remember { mutableStateOf<List<NotificationItemData>>(emptyList()) }
+
+    LaunchedEffect(currentUser) {
+        if (currentUser != null) {
+            val email = currentUser.email
+            if (email != null) {
+                db.collection("registrations")
+                    .whereEqualTo("userEmail", email)
+                    .addSnapshotListener { snapshot, e ->
+                        if (e != null) return@addSnapshotListener
+                        if (snapshot != null) {
+                            val items = snapshot.documents.map { doc ->
+                                val eventName = doc.getString("eventName") ?: "Event"
+                                val timestamp = doc.getTimestamp("timestamp") ?: Timestamp.now()
+                                NotificationItemData(
+                                    id = doc.id,
+                                    title = "Registration Successful",
+                                    message = "You have successfully registered for $eventName",
+                                    timestamp = timestamp
+                                )
+                            }.sortedByDescending { it.timestamp }
+                            notifications = items
+                        }
+                    }
+            }
+        }
+    }
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -79,45 +125,33 @@ fun NotificationScreen(padding: PaddingValues, userViewModel: UserViewModel) {
                 }
             }
 
-            // --- 2. Notification Sections ---
-            item { SectionTitle("Today") }
-            item { NotificationItem("Event info updated") }
-            item { NotificationItem("New volunteer opportunity") }
+            item { Spacer(modifier = Modifier.height(20.dp)) }
 
-            item { Spacer(modifier = Modifier.height(16.dp)) }
-
-            item { SectionTitle("Yesterday") }
-            item { NotificationItem("Activity completed") }
-
-            item { Spacer(modifier = Modifier.height(16.dp)) }
-
-            item { SectionTitle("This Week") }
-            item { NotificationItem("Event reminder") }
-            item { NotificationItem("New volunteer opportunity") }
-
-            item { Spacer(modifier = Modifier.height(16.dp)) }
-            item { SectionTitle("This Month") }
-            item { NotificationItem("Event reminder") }
-            item { NotificationItem("New volunteer opportunity") }
-            item { NotificationItem("Activity completed") }
-            item { NotificationItem("Event info updated") }
+            if (notifications.isEmpty()) {
+                item {
+                    Text(
+                        text = "No notifications yet.",
+                        color = Color.White,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            } else {
+                items(notifications) { notification ->
+                    NotificationItem(notification)
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+            }
         }
     }
 }
 
 @Composable
-fun SectionTitle(title: String) {
-    Text(
-        text = title,
-        color = Color.White,
-        fontWeight = FontWeight.Black,
-        fontSize = 18.sp,
-        modifier = Modifier.padding(bottom = 8.dp)
-    )
-}
+fun NotificationItem(notification: NotificationItemData) {
+    val date = notification.timestamp.toDate()
+    val dateFormat = SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault())
+    val formattedDate = dateFormat.format(date)
 
-@Composable
-fun NotificationItem(text: String) {
     // This defines what the DARK BADGE notification bar looks like
     Row(
         modifier = Modifier
@@ -141,10 +175,25 @@ fun NotificationItem(text: String) {
             )
         }
         Spacer(modifier = Modifier.width(12.dp))
-        Text(
-            text = text,
-            color = Color.White,
-            fontWeight = FontWeight.Medium
-        )
+        Column {
+            Text(
+                text = notification.title,
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp
+            )
+            Text(
+                text = notification.message,
+                color = Color.White.copy(alpha = 0.8f),
+                fontWeight = FontWeight.Normal,
+                fontSize = 14.sp
+            )
+             Text(
+                text = formattedDate,
+                color = Color.White.copy(alpha = 0.6f),
+                fontSize = 12.sp,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+        }
     }
 }

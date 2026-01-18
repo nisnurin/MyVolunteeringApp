@@ -8,9 +8,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.FileUpload
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -27,9 +30,38 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage // You may need to add this implementation to build.gradle
 import com.example.ict602my_vol.ui.theme.EventTest3Theme
 
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
+
 @Composable
-fun AdminProfileScreen(padding: PaddingValues, onLogout: () -> Unit) {
+fun AdminProfileScreen(onHomeClick: () -> Unit, onLogout: () -> Unit) {
     val tealColor = Color(0xFF4DB6AC)
+
+    // Firebase
+    val auth = Firebase.auth
+    val db = Firebase.firestore
+    val currentUser = auth.currentUser
+
+    // User Data State
+    var name by remember { mutableStateOf("Loading...") }
+    var email by remember { mutableStateOf(currentUser?.email ?: "Loading...") }
+    var contact by remember { mutableStateOf("Loading...") }
+
+    // Fetch Data
+    LaunchedEffect(currentUser) {
+        currentUser?.uid?.let { uid ->
+            db.collection("users").document(uid).get()
+                .addOnSuccessListener { document ->
+                    if (document != null && document.exists()) {
+                        name = document.getString("fullName") ?: "No Name"
+                        val fsEmail = document.getString("email")
+                        if (!fsEmail.isNullOrEmpty()) email = fsEmail
+                        contact = document.getString("phoneNumber") ?: "No Contact"
+                    }
+                }
+        }
+    }
 
     // State to store the selected image Uri
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
@@ -41,29 +73,46 @@ fun AdminProfileScreen(padding: PaddingValues, onLogout: () -> Unit) {
         selectedImageUri = uri
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(padding)
-            .background(Color.White)
-    ) {
-        // --- TOP BAR WITH LOGOUT ---
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp)
-        ) {
-            IconButton(
-                onClick = onLogout,
-                modifier = Modifier.align(Alignment.CenterEnd)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.ExitToApp,
-                    contentDescription = "Logout",
-                    tint = Color.Red
+    Scaffold(
+        bottomBar = {
+            NavigationBar(containerColor = Color.White) {
+                NavigationBarItem(
+                    selected = false,
+                    onClick = onHomeClick,
+                    icon = { Icon(Icons.Default.Home, contentDescription = null) }
+                )
+                NavigationBarItem(
+                    selected = true,
+                    onClick = { },
+                    icon = { Icon(Icons.Default.Person, contentDescription = "Profile") }
                 )
             }
         }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .background(Color.White)
+                .verticalScroll(rememberScrollState())
+        ) {
+            // --- TOP BAR WITH LOGOUT ---
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                IconButton(
+                    onClick = onLogout,
+                    modifier = Modifier.align(Alignment.CenterEnd)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ExitToApp,
+                        contentDescription = "Logout",
+                        tint = Color.Red
+                    )
+                }
+            }
 
         // --- TEAL HEADER SECTION ---
         Column(
@@ -175,15 +224,16 @@ fun AdminProfileScreen(padding: PaddingValues, onLogout: () -> Unit) {
                     modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    AdminFieldItem(label = "Name", value = "Ali bin Abu")
-                    AdminFieldItem(label = "Email", value = "Ali123abu@gmail.com")
-                    AdminFieldItem(label = "Contact", value = "013-9164552")
+                    AdminFieldItem(label = "Name", value = name)
+                    AdminFieldItem(label = "Email", value = email)
+                    AdminFieldItem(label = "Contact", value = contact)
                 }
             }
 
             Spacer(modifier = Modifier.height(30.dp))
         }
     }
+}
 }
 
 @Composable
@@ -210,6 +260,6 @@ fun AdminFieldItem(label: String, value: String) {
 @Composable
 fun AdminProfilePreview() {
     EventTest3Theme {
-        AdminProfileScreen(padding = PaddingValues(0.dp), onLogout = {})
+        AdminProfileScreen(onHomeClick = {}, onLogout = {})
     }
 }
