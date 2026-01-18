@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">ICT602 MY_VOL</string>
+    <string name="app_name">My Volunteering</string>
 
     <!-- Google Sign-In client ID -->
     <string name="default_web_client_id">269362713088-3a33voknt2t5tr1laan5lsfb3k2stfk6.apps.googleusercontent.com</string>
