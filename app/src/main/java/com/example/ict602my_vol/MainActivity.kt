@@ -218,7 +218,11 @@ class MainActivity : ComponentActivity() {
                         onManageEventsClick = onManageClick,
                         onLogout = onLogout
                     )
-                    3 -> ActivityScreen(padding = innerPadding, onNavigateToProfile = { selectedTab = 2 })
+                    3 -> ActivityScreen(
+                        padding = innerPadding,
+                        viewModel = manageEventViewModel,
+                        onNavigateToProfile = { selectedTab = 2 }
+                    )
                 }
 
                 if (currentSubScreen != "Main") {

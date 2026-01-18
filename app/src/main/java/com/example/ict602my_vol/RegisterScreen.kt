@@ -10,11 +10,14 @@ import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.*
+import coil.compose.AsyncImage
 import com.example.ict602my_vol.data.RegistrationData
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -89,6 +92,48 @@ fun RegisterScreen(
                 .padding(horizontal = 24.dp)
                 .verticalScroll(scrollState)
         ) {
+            // --- EVENT SUMMARY SECTION ---
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
+            ) {
+                Row(
+                    modifier = Modifier.padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    AsyncImage(
+                        model = event.imageUrl,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(80.dp)
+                            .clip(RoundedCornerShape(8.dp)),
+                        contentScale = ContentScale.Crop
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column {
+                        Text(
+                            text = event.name,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black
+                        )
+                        Text(
+                            text = event.location,
+                            fontSize = 14.sp,
+                            color = Color.Gray
+                        )
+                        Text(
+                            text = event.date,
+                            fontSize = 14.sp,
+                            color = Color.Gray
+                        )
+                    }
+                }
+            }
+
             Text("Login Information", fontWeight = FontWeight.Bold, color = Color.Gray)
             RegisterInput("Email", email, { email = it }, "example@gmail.com")
 
@@ -219,6 +264,7 @@ fun RegisterScreen(
                                 "userName" to fullName,
                                 "userEmail" to (auth.currentUser?.email ?: email),
                                 "eventName" to event.name,
+                                "eventId" to event.id,
                                 "timestamp" to com.google.firebase.Timestamp.now()
                             )
 

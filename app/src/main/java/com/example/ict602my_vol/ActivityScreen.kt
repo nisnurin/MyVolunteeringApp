@@ -24,35 +24,24 @@ import coil.compose.AsyncImage
 import com.example.ict602my_vol.data.VolEvent
 import com.example.ict602my_vol.ui.theme.BrandBlue
 import com.example.ict602my_vol.ui.theme.DarkBadge
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun ActivityScreen(
     padding: PaddingValues,
+    viewModel: ManageEventViewModel,
     onNavigateToProfile: () -> Unit
 ) {
-    // UPDATED: Dummy Data now includes the 'time' parameter
-    val registeredEvents = listOf(
-        VolEvent(
-            id = "1",
-            name = "Amanah.Co",
-            organizer = "Save Turtle",
-            date = "18 Jan 2026",
-            time = "08:00 AM", // Added time
-            location = "Pantai Batu Buruk",
-            description = "Protecting turtle nesting sites.",
-            imageUrl = "https://example.com/turtle.jpg"
-        ),
-        VolEvent(
-            id = "2",
-            name = "Green World",
-            organizer = "Mangrove Planting",
-            date = "22 Feb 2026",
-            time = "10:30 AM", // Added time
-            location = "Setiu Wetlands",
-            description = "Restoring the mangrove ecosystem.",
-            imageUrl = ""
-        )
-    )
+    val auth = FirebaseAuth.getInstance()
+    val currentUserEmail = auth.currentUser?.email
+
+    val registeredEventIds = viewModel.registrations
+        .filter { it.userEmail == currentUserEmail }
+        .map { it.eventId }
+
+    val registeredEvents = viewModel.allEvents.filter {
+        it.id in registeredEventIds
+    }
 
     Column(
         modifier = Modifier

@@ -15,6 +15,7 @@ class ManageEventViewModel : ViewModel() {
     private val _allEvents = mutableStateListOf<VolEvent>()
     private val _registrations = mutableStateListOf<RegistrationRecord>()
 
+    val allEvents: List<VolEvent> = _allEvents
     val registrations: List<RegistrationRecord> = _registrations
     var searchQuery by mutableStateOf("")
 
@@ -62,7 +63,8 @@ class ManageEventViewModel : ViewModel() {
                             id = doc.id,
                             userName = doc.getString("userName") ?: "Unknown",
                             userEmail = doc.getString("userEmail") ?: "",
-                            eventName = doc.getString("eventName") ?: "No Event"
+                            eventName = doc.getString("eventName") ?: "No Event",
+                            eventId = doc.getString("eventId") ?: ""
                         ))
                     }
                 }
