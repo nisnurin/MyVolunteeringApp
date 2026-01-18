@@ -26,7 +26,8 @@ import java.util.*
 fun RegisterScreen(
     event: com.example.ict602my_vol.data.VolEvent,
     onBack: () -> Unit,
-    onRegisterSuccess: (RegistrationData) -> Unit) {
+    onRegisterSuccess: (RegistrationData) -> Unit
+) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
     val auth = FirebaseAuth.getInstance()
@@ -72,13 +73,22 @@ fun RegisterScreen(
 
     Column(modifier = Modifier.fillMaxSize().background(Color.White)) {
         // Header
-        Row(modifier = Modifier.fillMaxWidth().padding(top = 40.dp, start = 8.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 40.dp, start = 8.dp, bottom = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") }
             Text("Register Volunteer", fontSize = 20.sp, fontWeight = FontWeight.Bold)
         }
 
-        Column(modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp).verticalScroll(scrollState)) {
-
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 24.dp)
+                .verticalScroll(scrollState)
+        ) {
             Text("Login Information", fontWeight = FontWeight.Bold, color = Color.Gray)
             RegisterInput("Email", email, { email = it }, "example@gmail.com")
 
@@ -106,22 +116,35 @@ fun RegisterScreen(
                     Text("Date of Birth", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                     OutlinedTextField(
                         value = dob, onValueChange = {}, readOnly = true,
-                        trailingIcon = { IconButton(onClick = { showDatePicker = true }) { Icon(Icons.Default.DateRange, null) } },
+                        trailingIcon = {
+                            IconButton(onClick = { showDatePicker = true }) {
+                                Icon(Icons.Default.DateRange, null)
+                            }
+                        },
                         modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(8.dp)
                     )
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text("Gender", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                    ExposedDropdownMenuBox(expanded = genderExpanded, onExpandedChange = { genderExpanded = !genderExpanded }) {
+                    ExposedDropdownMenuBox(
+                        expanded = genderExpanded,
+                        onExpandedChange = { genderExpanded = !genderExpanded }) {
                         OutlinedTextField(
                             value = gender, onValueChange = {}, readOnly = true,
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = genderExpanded) },
-                            modifier = Modifier.menuAnchor().fillMaxWidth(), shape = RoundedCornerShape(8.dp)
+                            modifier = Modifier
+                                .menuAnchor()
+                                .fillMaxWidth(),
+                            shape = RoundedCornerShape(8.dp)
                         )
-                        ExposedDropdownMenu(expanded = genderExpanded, onDismissRequest = { genderExpanded = false }) {
+                        ExposedDropdownMenu(
+                            expanded = genderExpanded,
+                            onDismissRequest = { genderExpanded = false }) {
                             listOf("Male", "Female").forEach { option ->
-                                DropdownMenuItem(text = { Text(option) }, onClick = { gender = option; genderExpanded = false })
+                                DropdownMenuItem(
+                                    text = { Text(option) },
+                                    onClick = { gender = option; genderExpanded = false })
                             }
                         }
                     }
@@ -131,15 +154,43 @@ fun RegisterScreen(
             RegisterInput("Address", address, { address = it }, "No. 12, Jalan Kenanga 3")
 
             Row(modifier = Modifier.fillMaxWidth()) {
-                Box(modifier = Modifier.weight(1f)) { RegisterInput("Post Code", postCode, { postCode = it }, "40100") }
+                Box(modifier = Modifier.weight(1f)) {
+                    RegisterInput(
+                        "Post Code",
+                        postCode,
+                        { postCode = it },
+                        "40100"
+                    )
+                }
                 Spacer(modifier = Modifier.width(8.dp))
-                Box(modifier = Modifier.weight(1f)) { RegisterInput("City", city, { city = it }, "Shah Alam") }
+                Box(modifier = Modifier.weight(1f)) {
+                    RegisterInput(
+                        "City",
+                        city,
+                        { city = it },
+                        "Shah Alam"
+                    )
+                }
             }
 
             Row(modifier = Modifier.fillMaxWidth()) {
-                Box(modifier = Modifier.weight(1f)) { RegisterInput("Residential Country", residentialCountry, { residentialCountry = it }, "Malaysia") }
+                Box(modifier = Modifier.weight(1f)) {
+                    RegisterInput(
+                        "Residential Country",
+                        residentialCountry,
+                        { residentialCountry = it },
+                        "Malaysia"
+                    )
+                }
                 Spacer(modifier = Modifier.width(8.dp))
-                Box(modifier = Modifier.weight(1f)) { RegisterInput("State", state, { state = it }, "Selangor") }
+                Box(modifier = Modifier.weight(1f)) {
+                    RegisterInput(
+                        "State",
+                        state,
+                        { state = it },
+                        "Selangor"
+                    )
+                }
             }
 
             RegisterInput("Blood Type", bloodType, { bloodType = it }, "O-")
@@ -153,21 +204,27 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
+            // --- THE UPDATED BUTTON ---
             Button(
                 onClick = {
-                    // 1. Input Validation: Check if required fields are filled
                     if (fullName.isEmpty() || address.isEmpty() || emergencyPhone.isEmpty()) {
-                        Toast.makeText(context, "Please fill in all required personal details!", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Please fill in all required details!", Toast.LENGTH_SHORT).show()
                     } else {
                         isLoading = true
-
-                        // 2. Get the currently logged-in User ID
                         val userId = auth.currentUser?.uid
 
                         if (userId != null) {
-                            // 3. Prepare data for Firestore
+                            // 1. Prepare data for the REPORT (registrations collection)
+                            val reportData = hashMapOf(
+                                "userName" to fullName,
+                                "userEmail" to (auth.currentUser?.email ?: email),
+                                "eventName" to event.name,
+                                "timestamp" to com.google.firebase.Timestamp.now()
+                            )
+
+                            // 2. Prepare data for the PROFILE (volunteers collection)
                             val userProfile = hashMapOf(
-                                "email" to (auth.currentUser?.email ?: email), // Use existing login email
+                                "email" to (auth.currentUser?.email ?: email),
                                 "fullName" to fullName,
                                 "nric" to nric,
                                 "dob" to dob,
@@ -181,37 +238,46 @@ fun RegisterScreen(
                                 "role" to "volunteer"
                             )
 
-                            // 4. Save directly to Firestore collection "volunteers"
-                            db.collection("volunteers").document(userId)
-                                .set(userProfile)
+                            // 3. Save to registrations collection FIRST
+                            db.collection("registrations")
+                                .add(reportData)
                                 .addOnSuccessListener {
-                                    isLoading = false
-                                    Toast.makeText(context, "Registration Successful!", Toast.LENGTH_SHORT).show()
+                                    // 4. Save to volunteers collection SECOND
+                                    db.collection("volunteers").document(userId)
+                                        .set(userProfile)
+                                        .addOnSuccessListener {
+                                            isLoading = false
+                                            Toast.makeText(context, "Registration Successful!", Toast.LENGTH_SHORT).show()
 
-                                    onRegisterSuccess(RegistrationData(
-                                        fullName = fullName,
-                                        nationality = nationality,
-                                        nric = nric,
-                                        dob = dob,
-                                        gender = gender,
-                                        address = address,
-                                        postCode = postCode,
-                                        city = city,
-                                        state = state,
-                                        residentialCountry = residentialCountry,
-                                        bloodType = bloodType,
-                                        emergencyContactName = emergencyName,
-                                        emergencyContactRelationship = emergencyRel,
-                                        emergencyContactNumber = emergencyPhone,
-                                        email = auth.currentUser?.email ?: email,
-                                        eventName = event.name,
-                                        location = event.location,
-                                        status = "Pending"
-                                    ))
+                                            onRegisterSuccess(RegistrationData(
+                                                fullName = fullName,
+                                                nationality = nationality,
+                                                nric = nric,
+                                                dob = dob,
+                                                gender = gender,
+                                                address = address,
+                                                postCode = postCode,
+                                                city = city,
+                                                state = state,
+                                                residentialCountry = residentialCountry,
+                                                bloodType = bloodType,
+                                                emergencyContactName = emergencyName,
+                                                emergencyContactRelationship = emergencyRel,
+                                                emergencyContactNumber = emergencyPhone,
+                                                email = auth.currentUser?.email ?: email,
+                                                eventName = event.name,
+                                                location = event.location,
+                                                status = "Pending"
+                                            ))
+                                        }
+                                        .addOnFailureListener { e ->
+                                            isLoading = false
+                                            Toast.makeText(context, "Profile Error: ${e.message}", Toast.LENGTH_LONG).show()
+                                        }
                                 }
                                 .addOnFailureListener { e ->
                                     isLoading = false
-                                    Toast.makeText(context, "Save Failed: ${e.message}", Toast.LENGTH_LONG).show()
+                                    Toast.makeText(context, "Registration Error: ${e.message}", Toast.LENGTH_LONG).show()
                                 }
                         } else {
                             isLoading = false
@@ -219,7 +285,9 @@ fun RegisterScreen(
                         }
                     }
                 },
-                modifier = Modifier.fillMaxWidth().height(56.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
                 shape = RoundedCornerShape(8.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
                 enabled = !isLoading
@@ -236,7 +304,12 @@ fun RegisterScreen(
 }
 
 @Composable
-fun RegisterInput(label: String, value: String, onValueChange: (String) -> Unit, placeholder: String) {
+fun RegisterInput(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String
+) {
     Column(modifier = Modifier.padding(vertical = 6.dp)) {
         Text(text = label, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
         OutlinedTextField(
