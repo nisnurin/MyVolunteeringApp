@@ -93,10 +93,15 @@ class MainActivity : ComponentActivity() {
                     loginRole = role
                     currentScreen = if (role == "Admin") "AdminLogin" else "VolunteerLogin"
                 },
-                onGoogleClick = { signInWithGoogle {
-                    loginRole = "Volunteer"
-                    currentScreen = "Home"
-                } }
+                onGoogleClick = {
+                    signInWithGoogle {
+                        if (loginRole == "Admin") {
+                            currentScreen = "AdminDashboard"
+                        } else {
+                            currentScreen = "Home"
+                        }
+                    }
+                }
             )
             "VolunteerLogin" -> LoginScreen(
                 onLoginSuccess = {
@@ -114,7 +119,7 @@ class MainActivity : ComponentActivity() {
                     currentScreen = "AdminDashboard"
                 },
                 onNavigateToSignUp = {
-                    currentScreen = "AdminSignUp" }
+                    currentScreen = "Main" }
             )
 
             "AdminSignUp" -> AdminScreen( // This is your Admin signup screen
@@ -207,10 +212,7 @@ class MainActivity : ComponentActivity() {
             }
         ) { innerPadding ->
             Box(modifier = Modifier.
-            fillMaxSize()
-                .padding(bottom = innerPadding.calculateBottomPadding())
-            )
-            {
+            fillMaxSize().padding(innerPadding)) {
                 when (selectedTab) {
                     0 -> HomeScreen(
                         paddingValues = innerPadding,
