@@ -23,6 +23,9 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import java.text.SimpleDateFormat
 import java.util.*
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.tooling.preview.Preview
+import com.example.ict602my_vol.data.VolEvent
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -367,4 +370,27 @@ fun RegisterInput(
             singleLine = true
         )
     }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun RegisterScreenPreview() {
+    // 1. Sediakan data contoh (Dummy Data)
+    val dummyEvent = VolEvent(
+        id = "1",
+        name = "Kuala Lumpur Beach Clean Up",
+        location = "Pantai Remis",
+        date = "25 Dec 2025",
+        imageUrl = "https://example.com/image.jpg", // Gambar tidak akan keluar dalam preview jika URL tidak sah
+        description = "Misi membersihkan pantai."
+    )
+
+    // 2. Panggil Composable Screen
+    RegisterScreen(
+        event = dummyEvent,
+        onBack = { /* Tidak melakukan apa-apa dalam preview */ },
+        onRegisterSuccess = { data ->
+            // Logik selepas berjaya (boleh dibiarkan kosong untuk preview)
+        }
+    )
 }

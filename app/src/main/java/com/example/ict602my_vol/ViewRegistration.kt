@@ -64,8 +64,6 @@ fun ViewRegistrationScreen(
 
                 // --- MAKLUMAT EVENT (CENTERED) ---
                 RegistrationDetailItem(label = "Event Name", value = data.eventName)
-                RegistrationDetailItem(label = "Date", value = "21 December 2025")
-                RegistrationDetailItem(label = "Time", value = "9:00 AM - 1:00 PM")
                 RegistrationDetailItem(label = "Location", value = data.location)
                 RegistrationDetailItem(label = "Status", value = data.status)
 
