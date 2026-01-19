@@ -45,8 +45,12 @@ fun NotificationScreen(padding: PaddingValues, userViewModel: UserViewModel) {
     val currentUser = auth.currentUser
 
     var notifications by remember { mutableStateOf<List<NotificationItemData>>(emptyList()) }
+    
+    // Get valid event data from UserViewModel to filter notifications
+    val validEventIds = userViewModel.validEventIds
+    val validEventNames = userViewModel.validEventNames
 
-    LaunchedEffect(currentUser) {
+    LaunchedEffect(currentUser, validEventIds, validEventNames) {
         if (currentUser != null) {
             val email = currentUser.email
             if (email != null) {
@@ -55,15 +59,22 @@ fun NotificationScreen(padding: PaddingValues, userViewModel: UserViewModel) {
                     .addSnapshotListener { snapshot, e ->
                         if (e != null) return@addSnapshotListener
                         if (snapshot != null) {
-                            val items = snapshot.documents.map { doc ->
+                            val items = snapshot.documents.mapNotNull { doc ->
+                                val eventId = doc.getString("eventId") ?: ""
                                 val eventName = doc.getString("eventName") ?: "Event"
-                                val timestamp = doc.getTimestamp("timestamp") ?: Timestamp.now()
-                                NotificationItemData(
-                                    id = doc.id,
-                                    title = "Registration Successful",
-                                    message = "You have successfully registered for $eventName",
-                                    timestamp = timestamp
-                                )
+                                
+                                // robust filtering: match by ID or Name
+                                if (eventId in validEventIds || eventName in validEventNames) {
+                                    val timestamp = doc.getTimestamp("timestamp") ?: Timestamp.now()
+                                    NotificationItemData(
+                                        id = doc.id,
+                                        title = "Registration Successful",
+                                        message = "You have successfully registered for $eventName",
+                                        timestamp = timestamp
+                                    )
+                                } else {
+                                    null
+                                }
                             }.sortedByDescending { it.timestamp }
                             notifications = items
                         }

@@ -9,6 +9,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -30,22 +31,38 @@ class UserViewModel : ViewModel() {
     var registeredEventsCount by mutableIntStateOf(0)
     var availableEventsCount by mutableIntStateOf(0)
 
+    // Publicly exposed valid event data for filtering in other screens (e.g., NotificationScreen)
+    var validEventIds by mutableStateOf(setOf<String>())
+    var validEventNames by mutableStateOf(setOf<String>())
+
     // Role
     var isAdmin by mutableStateOf(false)
 
     private val authStateListener = FirebaseAuth.AuthStateListener { fetchUserData() }
+    
+    private var eventsListener: ListenerRegistration? = null
+    private var registrationsListener: ListenerRegistration? = null
+
+    // Local data structures for robust counting
+    private data class EventMinimal(val id: String, val name: String)
+    private data class RegistrationMinimal(val eventId: String, val eventName: String)
+
+    private var allEvents = listOf<EventMinimal>()
+    private var myRegistrations = listOf<RegistrationMinimal>()
 
     init {
         Firebase.auth.addAuthStateListener(authStateListener)
         fetchUserData()
-        fetchEventStats()
+        listenToAvailableEvents()
     }
 
     override fun onCleared() {
         super.onCleared()
         Firebase.auth.removeAuthStateListener(authStateListener)
+        eventsListener?.remove()
+        registrationsListener?.remove()
     }
-
+    
     fun fetchUserData() {
         val user = Firebase.auth.currentUser
         if (user == null) {
@@ -56,10 +73,14 @@ class UserViewModel : ViewModel() {
             isAdmin = false
             selectedImageUri = null
             registeredEventsCount = 0
+            registrationsListener?.remove()
+            registrationsListener = null
+            myRegistrations = emptyList()
             return
         }
 
         // User is signed in. Set initial data from auth profile.
+        listenToUserRegistrations(user.email)
         userEmail = user.email ?: "No Email"
         userName = user.displayName ?: "Volunteer"
         val db = Firebase.firestore
@@ -117,29 +138,66 @@ class UserViewModel : ViewModel() {
             }
     }
 
-    fun fetchEventStats() {
+    private fun listenToAvailableEvents() {
         val db = Firebase.firestore
-        
-        // 1. Available Events
-        db.collection("events").addSnapshotListener { snapshot, _ ->
+        eventsListener = db.collection("events").addSnapshotListener { snapshot, _ ->
             if (snapshot != null) {
                 availableEventsCount = snapshot.size()
+                // Store minimal event data for cross-referencing
+                val events = snapshot.documents.map { doc ->
+                    EventMinimal(
+                        id = doc.id,
+                        name = doc.getString("name") ?: ""
+                    )
+                }
+                allEvents = events
+                
+                // Update public states
+                validEventIds = events.map { it.id }.toSet()
+                validEventNames = events.map { it.name }.toSet()
+                
+                recalculateRegisteredCount()
             }
         }
+    }
 
-        // 2. Registered Events (Real-time count)
-        val user = Firebase.auth.currentUser
-        if (user != null && user.email != null) {
-            db.collection("registrations")
-                .whereEqualTo("userEmail", user.email)
-                .addSnapshotListener { snapshot, _ ->
-                    if (snapshot != null) {
-                        registeredEventsCount = snapshot.size()
-                    }
-                }
-        } else {
+    private fun listenToUserRegistrations(email: String?) {
+        registrationsListener?.remove()
+        if (email == null) {
             registeredEventsCount = 0
+            myRegistrations = emptyList()
+            return
         }
+
+        val db = Firebase.firestore
+        registrationsListener = db.collection("registrations")
+            .whereEqualTo("userEmail", email)
+            .addSnapshotListener { snapshot, _ ->
+                if (snapshot != null) {
+                    // Store minimal registration data
+                    myRegistrations = snapshot.documents.map { doc ->
+                        RegistrationMinimal(
+                            eventId = doc.getString("eventId") ?: "",
+                            eventName = doc.getString("eventName") ?: ""
+                        )
+                    }
+                    recalculateRegisteredCount()
+                }
+            }
+    }
+
+    private fun recalculateRegisteredCount() {
+        // Exact logic from ActivityScreen:
+        // 1. Get IDs and Names from registrations
+        val myEventIds = myRegistrations.map { it.eventId }.filter { it.isNotEmpty() }.toSet()
+        val myEventNames = myRegistrations.map { it.eventName }.toSet()
+
+        // 2. Filter ALL events to find matches by ID OR Name
+        val count = allEvents.count { event ->
+            event.id in myEventIds || event.name in myEventNames
+        }
+        
+        registeredEventsCount = count
     }
 
     fun updateUserProfile(newName: String, newNationality: String, newAbout: String, onResult: (Boolean) -> Unit) {

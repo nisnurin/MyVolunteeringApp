@@ -18,13 +18,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.ict602my_vol.data.VolEvent
 import com.example.ict602my_vol.ui.theme.BrandBlue
-import com.example.ict602my_vol.ui.theme.DarkBadge
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
@@ -131,10 +131,10 @@ fun ActivityToggle(onNavigateToProfile: () -> Unit) {
 fun ActivityCard(event: VolEvent) {
     Card(
         shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
         Column {
             AsyncImage(
@@ -143,47 +143,58 @@ fun ActivityCard(event: VolEvent) {
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(150.dp)
+                    .height(180.dp)
                     .background(Color.LightGray)
             )
 
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(DarkBadge)
-                    .padding(16.dp)
+                    .background(Color(0xFF267D7D)) // Matches Register button in EventDetailScreen
+                    .padding(12.dp)
             ) {
-                Text(text = "Organizer", color = Color.White.copy(alpha = 0.7f), fontSize = 12.sp)
+                Text(text = event.organizer, color = Color.White.copy(alpha = 0.8f), fontSize = 11.sp)
                 Text(text = event.name, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
 
-                Spacer(modifier = Modifier.height(8.dp))
+                // --- STACKED INFO COLUMN ---
+                Column(
+                    modifier = Modifier.padding(top = 4.dp),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    // Line 1: Date
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Default.DateRange,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(13.dp)
+                        )
+                        Text(text = " ${event.date}", color = Color.White, fontSize = 12.sp)
+                    }
 
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        Icons.Default.DateRange,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    // Line 2: Time
+                    if (event.time.isNotEmpty()) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                painter = painterResource(id = android.R.drawable.ic_menu_recent_history),
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(13.dp)
+                            )
+                            Text(text = " ${event.time}", color = Color.White, fontSize = 12.sp)
+                        }
+                    }
 
-                    // UPDATED: Now displays both Date and Time
-                    Text(
-                        text = "${event.date} • ${event.time}",
-                        color = Color.White,
-                        fontSize = 14.sp
-                    )
-                }
-
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
-                    Icon(
-                        Icons.Default.LocationOn,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(text = event.location, color = Color.White, fontSize = 14.sp)
+                    // Line 3: Location
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Default.LocationOn,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(13.dp)
+                        )
+                        Text(text = " ${event.location}", color = Color.White, fontSize = 12.sp)
+                    }
                 }
             }
         }
