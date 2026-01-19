@@ -32,6 +32,7 @@ import java.util.Date
 
 data class NotificationItemData(
     val id: String,
+    val eventId: String,
     val title: String,
     val message: String,
     val timestamp: Timestamp
@@ -68,6 +69,7 @@ fun NotificationScreen(padding: PaddingValues, userViewModel: UserViewModel) {
                                     val timestamp = doc.getTimestamp("timestamp") ?: Timestamp.now()
                                     NotificationItemData(
                                         id = doc.id,
+                                        eventId = eventId,
                                         title = "Registration Successful",
                                         message = "You have successfully registered for $eventName",
                                         timestamp = timestamp
@@ -75,7 +77,11 @@ fun NotificationScreen(padding: PaddingValues, userViewModel: UserViewModel) {
                                 } else {
                                     null
                                 }
-                            }.sortedByDescending { it.timestamp }
+                            }
+                            // Deduplicate to ensure count tallies with Profile/Activity screens (which show unique events)
+                            .sortedByDescending { it.timestamp }
+                            .distinctBy { if (it.eventId.isNotEmpty()) it.eventId else it.message }
+                            
                             notifications = items
                         }
                     }
