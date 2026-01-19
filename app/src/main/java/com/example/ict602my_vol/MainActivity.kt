@@ -40,6 +40,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var auth: FirebaseAuth
     private lateinit var googleSignInClient: GoogleSignInClient
     private val RC_SIGN_IN = 9001
+    private var onGoogleSignInSuccess: (() -> Unit)? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -62,7 +63,8 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun signInWithGoogle() {
+    private fun signInWithGoogle(onSuccess: () -> Unit) {
+        onGoogleSignInSuccess = onSuccess
         val signInIntent = googleSignInClient.signInIntent
         startActivityForResult(signInIntent, RC_SIGN_IN)
     }
@@ -91,7 +93,10 @@ class MainActivity : ComponentActivity() {
                     loginRole = role
                     currentScreen = if (role == "Admin") "AdminLogin" else "VolunteerLogin"
                 },
-                onGoogleClick = { signInWithGoogle() }
+                onGoogleClick = { signInWithGoogle {
+                    loginRole = "Volunteer"
+                    currentScreen = "Home"
+                } }
             )
             "VolunteerLogin" -> LoginScreen(
                 onLoginSuccess = {
@@ -118,7 +123,10 @@ class MainActivity : ComponentActivity() {
                     currentScreen = "AdminDashboard"
                 },
                 onNavigateToLogin = { currentScreen = "AdminLogin" },
-                onGoogleClick = { signInWithGoogle() }
+                onGoogleClick = { signInWithGoogle {
+                    loginRole = "Admin"
+                    currentScreen = "AdminDashboard"
+                } }
             )
 
             // --- ADMIN MAIN SECTION ---
@@ -198,7 +206,11 @@ class MainActivity : ComponentActivity() {
                 }
             }
         ) { innerPadding ->
-            Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+            Box(modifier = Modifier.
+            fillMaxSize()
+                .padding(bottom = innerPadding.calculateBottomPadding())
+            )
+            {
                 when (selectedTab) {
                     0 -> HomeScreen(
                         paddingValues = innerPadding,
@@ -274,12 +286,21 @@ class MainActivity : ComponentActivity() {
             try {
                 val account = task.getResult(ApiException::class.java)
                 val credential = GoogleAuthProvider.getCredential(account.idToken, null)
+
                 auth.signInWithCredential(credential).addOnCompleteListener(this) { authTask ->
                     if (authTask.isSuccessful) {
                         Toast.makeText(this, "Login Successful", Toast.LENGTH_SHORT).show()
+
+                        // NI PENTING: Supaya skrin bertukar ke AdminDashboard
+                        runOnUiThread {
+                            onGoogleSignInSuccess?.invoke()
+                        }
                     }
                 }
-            } catch (e: ApiException) { e.printStackTrace() }
+            } catch (e: ApiException) {
+                e.printStackTrace()
+                Toast.makeText(this, "Google Error: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 }
