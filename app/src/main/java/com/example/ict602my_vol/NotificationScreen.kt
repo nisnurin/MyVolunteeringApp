@@ -32,6 +32,7 @@ import java.util.Date
 
 data class NotificationItemData(
     val id: String,
+    val eventId: String,
     val title: String,
     val message: String,
     val timestamp: Timestamp
@@ -45,8 +46,12 @@ fun NotificationScreen(padding: PaddingValues, userViewModel: UserViewModel) {
     val currentUser = auth.currentUser
 
     var notifications by remember { mutableStateOf<List<NotificationItemData>>(emptyList()) }
+    
+    // Get valid event data from UserViewModel to filter notifications
+    val validEventIds = userViewModel.validEventIds
+    val validEventNames = userViewModel.validEventNames
 
-    LaunchedEffect(currentUser) {
+    LaunchedEffect(currentUser, validEventIds, validEventNames) {
         if (currentUser != null) {
             val email = currentUser.email
             if (email != null) {
@@ -55,16 +60,28 @@ fun NotificationScreen(padding: PaddingValues, userViewModel: UserViewModel) {
                     .addSnapshotListener { snapshot, e ->
                         if (e != null) return@addSnapshotListener
                         if (snapshot != null) {
-                            val items = snapshot.documents.map { doc ->
+                            val items = snapshot.documents.mapNotNull { doc ->
+                                val eventId = doc.getString("eventId") ?: ""
                                 val eventName = doc.getString("eventName") ?: "Event"
-                                val timestamp = doc.getTimestamp("timestamp") ?: Timestamp.now()
-                                NotificationItemData(
-                                    id = doc.id,
-                                    title = "Registration Successful",
-                                    message = "You have successfully registered for $eventName",
-                                    timestamp = timestamp
-                                )
-                            }.sortedByDescending { it.timestamp }
+                                
+                                // robust filtering: match by ID or Name
+                                if (eventId in validEventIds || eventName in validEventNames) {
+                                    val timestamp = doc.getTimestamp("timestamp") ?: Timestamp.now()
+                                    NotificationItemData(
+                                        id = doc.id,
+                                        eventId = eventId,
+                                        title = "Registration Successful",
+                                        message = "You have successfully registered for $eventName",
+                                        timestamp = timestamp
+                                    )
+                                } else {
+                                    null
+                                }
+                            }
+                            // Deduplicate to ensure count tallies with Profile/Activity screens (which show unique events)
+                            .sortedByDescending { it.timestamp }
+                            .distinctBy { if (it.eventId.isNotEmpty()) it.eventId else it.message }
+                            
                             notifications = items
                         }
                     }
