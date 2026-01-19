@@ -155,11 +155,6 @@ fun ProfileScreen(
                 Spacer(Modifier.width(8.dp))
                 Text(text = userViewModel.userEmail, color = Color.Gray)
             }
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
-                Icon(Icons.Default.LocationOn, null, modifier = Modifier.size(16.dp), tint = Color.Gray)
-                Spacer(Modifier.width(8.dp))
-                Text(text = userViewModel.userNationality, color = Color.Gray)
-            }
         }
 
         // --- 5. BOTTOM SECTION (Now uses Weight to fill screen) ---
