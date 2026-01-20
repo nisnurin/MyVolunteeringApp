@@ -2,6 +2,7 @@ package com.example.ict602my_vol
 
 import android.content.Context
 import android.net.Uri
+import android.util.Base64
 import com.example.ict602my_vol.utils.uriToBase64
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -64,6 +65,22 @@ fun AdminProfileScreen(
             if (base64String != null) {
                 userViewModel.saveAdminProfileImage(base64String)
             }
+        }
+    }
+
+    // Process image data safely
+    val imageModel = remember(profilePictureBase64) {
+        if (!profilePictureBase64.isNullOrEmpty()) {
+            try {
+                val cleanBase64 = profilePictureBase64.trim()
+                    .removePrefix("data:image/jpeg;base64,")
+                    .removePrefix("data:image/png;base64,")
+                Base64.decode(cleanBase64, Base64.DEFAULT)
+            } catch (e: Exception) {
+                R.drawable.location_pic
+            }
+        } else {
+            R.drawable.location_pic
         }
     }
 
@@ -132,29 +149,17 @@ fun AdminProfileScreen(
                 border = BorderStroke(2.dp, Color.White),
                 color = Color.White
             ) {
-                if (!profilePictureBase64.isNullOrEmpty()) {
-                    val imageUri = "data:image/jpeg;base64,$profilePictureBase64"
-                    AsyncImage(
-                        model = imageUri,
-                        contentDescription = "Profile Picture",
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(CircleShape)
-                            .clickable { photoPickerLauncher.launch("image/*") },
-                        contentScale = ContentScale.Crop
-                    )
-                } else {
-                    // Default placeholder image
-                    Image(
-                        painter = painterResource(id = R.drawable.location_pic),
-                        contentDescription = "Default Profile",
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(CircleShape)
-                            .clickable { photoPickerLauncher.launch("image/*") },
-                        contentScale = ContentScale.Crop
-                    )
-                }
+                AsyncImage(
+                    model = imageModel,
+                    contentDescription = "Profile Picture",
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(CircleShape)
+                        .clickable { photoPickerLauncher.launch("image/*") },
+                    contentScale = ContentScale.Crop,
+                    placeholder = painterResource(R.drawable.location_pic),
+                    error = painterResource(R.drawable.location_pic)
+                )
             }
 
             Spacer(modifier = Modifier.height(15.dp))
