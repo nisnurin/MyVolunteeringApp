@@ -17,11 +17,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 // Firebase Imports
 import com.google.firebase.firestore.FirebaseFirestore
 
 @Composable
 fun AdminDashboardScreen(
+    userViewModel: UserViewModel = viewModel(),
     onManageEventClick: () -> Unit,
     onViewReportClick: () -> Unit,
     onProfileClick: () -> Unit,
@@ -29,32 +31,9 @@ fun AdminDashboardScreen(
 ) {
     val tealColor = Color(0xFF4DB6AC)
 
-    // 1. Initialize Firestore
-    val db = FirebaseFirestore.getInstance()
-
-    // 2. Real-time State Variables
-    var eventCount by remember { mutableIntStateOf(0) }
-    var userCount by remember { mutableIntStateOf(0) }
-
-    // 3. Setup Firebase Listeners
-    // LaunchedEffect(Unit) ensures the listener starts when the screen opens
-    LaunchedEffect(Unit) {
-        // Listen to "events" collection
-        val eventSubscription = db.collection("events")
-            .addSnapshotListener { snapshot, error ->
-                if (snapshot != null) {
-                    eventCount = snapshot.size()
-                }
-            }
-
-        // Listen to "users" collection
-        val userSubscription = db.collection("users")
-            .addSnapshotListener { snapshot, error ->
-                if (snapshot != null) {
-                    userCount = snapshot.size()
-                }
-            }
-    }
+    // Stats from ViewModel stay even when navigating
+    val eventCount = userViewModel.adminEventCount
+    val userCount = userViewModel.adminUserCount
 
     BackHandler { onLogout() }
 

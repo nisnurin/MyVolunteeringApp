@@ -1,6 +1,10 @@
 package com.example.ict602my_vol
 
 import android.net.Uri
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.util.Base64
+import android.content.Context
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.*
@@ -15,6 +19,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,42 +39,34 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
 @Composable
-fun AdminProfileScreen(onHomeClick: () -> Unit, onLogout: () -> Unit) {
+fun AdminProfileScreen(
+    userViewModel: UserViewModel = viewModel(),
+    onHomeClick: () -> Unit,
+    onLogout: () -> Unit
+) {
     val tealColor = Color(0xFF4DB6AC)
 
     // Firebase
-    val auth = Firebase.auth
-    val db = Firebase.firestore
-    val currentUser = auth.currentUser
+    val currentUser = Firebase.auth.currentUser
 
-    // User Data State
-    var name by remember { mutableStateOf("Loading...") }
-    var email by remember { mutableStateOf(currentUser?.email ?: "Loading...") }
-    var contact by remember { mutableStateOf("Loading...") }
+    // Use state from ViewModel
+    val name = userViewModel.userName
+    val email = userViewModel.userEmail
+    val contact = userViewModel.userPhone
+    val selectedImageUri = userViewModel.selectedImageUri
 
-    // Fetch Data
-    LaunchedEffect(currentUser) {
-        currentUser?.uid?.let { uid ->
-            db.collection("users").document(uid).get()
-                .addOnSuccessListener { document ->
-                    if (document != null && document.exists()) {
-                        name = document.getString("fullName") ?: "No Name"
-                        val fsEmail = document.getString("email")
-                        if (!fsEmail.isNullOrEmpty()) email = fsEmail
-                        contact = document.getString("phoneNumber") ?: "No Contact"
-                    }
-                }
-        }
-    }
-
-    // State to store the selected image Uri
-    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    val context = LocalContext.current
 
     // Launcher to handle picking an image from the gallery/Drive
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        selectedImageUri = uri
+        if (uri != null) {
+            val base64String = uriToBase64(context, uri)
+            if (base64String != null) {
+                userViewModel.saveAdminProfileImage(uri, base64String)
+            }
+        }
     }
 
     Scaffold(
@@ -254,5 +251,19 @@ fun AdminFieldItem(label: String, value: String) {
 fun AdminProfilePreview() {
     EventTest3Theme {
         AdminProfileScreen(onHomeClick = {}, onLogout = {})
+    }
+}
+
+fun uriToBase64(context: Context, uri: Uri): String? {
+    return try {
+        val inputStream = context.contentResolver.openInputStream(uri)
+        val bitmap = BitmapFactory.decodeStream(inputStream)
+        val outputStream = java.io.ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 50, outputStream)
+        val byteArray = outputStream.toByteArray()
+        Base64.encodeToString(byteArray, Base64.DEFAULT)
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
     }
 }

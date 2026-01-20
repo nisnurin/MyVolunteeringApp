@@ -72,6 +72,7 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun AppRoot() {
         val manageEventViewModel: ManageEventViewModel = viewModel()
+        val userViewModel: UserViewModel = viewModel()
         var currentScreen by remember { mutableStateOf("Welcome") }
         var selectedEventForEdit by remember { mutableStateOf<VolEvent?>(null) }
         var loginRole by remember { mutableStateOf("Volunteer") }
@@ -136,6 +137,7 @@ class MainActivity : ComponentActivity() {
 
             // --- ADMIN MAIN SECTION ---
             "AdminDashboard" -> AdminDashboardScreen(
+                userViewModel = userViewModel,
                 onManageEventClick = { currentScreen = "ManageEvent" },
                 onViewReportClick = { currentScreen = "Report" },
                 onProfileClick = { currentScreen = "AdminProfile" },
@@ -146,6 +148,7 @@ class MainActivity : ComponentActivity() {
             )
 
             "AdminProfile" -> AdminProfileScreen(
+                userViewModel = userViewModel,
                 onHomeClick = { currentScreen = "AdminDashboard" },
                 onLogout = {
                     auth.signOut()
@@ -180,6 +183,7 @@ class MainActivity : ComponentActivity() {
             // --- VOLUNTEER SECTION ---
             "Home" -> HomePage(
                 manageEventViewModel = manageEventViewModel,
+                userViewModel = userViewModel,
                 onManageClick = { /* Admins only, but kept for logic */ },
                 onLogout = {
                     auth.signOut()

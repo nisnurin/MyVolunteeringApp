@@ -26,6 +26,7 @@ class UserViewModel : ViewModel() {
     var userPhone by mutableStateOf("-")
     var userGender by mutableStateOf("-")
     var userStory by mutableStateOf("I love volunteering!")
+    var profileImageEncoded by mutableStateOf("")
 
     // Stats
     var registeredEventsCount by mutableIntStateOf(0)
@@ -38,10 +39,16 @@ class UserViewModel : ViewModel() {
     // Role
     var isAdmin by mutableStateOf(false)
 
+    // Admin Dashboard Stats
+    var adminEventCount by mutableIntStateOf(0)
+    var adminUserCount by mutableIntStateOf(0)
+
     private val authStateListener = FirebaseAuth.AuthStateListener { fetchUserData() }
     
     private var eventsListener: ListenerRegistration? = null
     private var registrationsListener: ListenerRegistration? = null
+    private var adminStatsEventsListener: ListenerRegistration? = null
+    private var adminStatsUsersListener: ListenerRegistration? = null
 
     // Local data structures for robust counting
     private data class EventMinimal(val id: String, val name: String)
@@ -54,6 +61,7 @@ class UserViewModel : ViewModel() {
         Firebase.auth.addAuthStateListener(authStateListener)
         fetchUserData()
         listenToAvailableEvents()
+        listenToAdminDashboardStats()
     }
 
     override fun onCleared() {
@@ -61,6 +69,20 @@ class UserViewModel : ViewModel() {
         Firebase.auth.removeAuthStateListener(authStateListener)
         eventsListener?.remove()
         registrationsListener?.remove()
+        adminStatsEventsListener?.remove()
+        adminStatsUsersListener?.remove()
+    }
+    
+    private fun listenToAdminDashboardStats() {
+        val db = Firebase.firestore
+        adminStatsEventsListener = db.collection("events")
+            .addSnapshotListener { snapshot, _ ->
+                if (snapshot != null) adminEventCount = snapshot.size()
+            }
+        adminStatsUsersListener = db.collection("users")
+            .addSnapshotListener { snapshot, _ ->
+                if (snapshot != null) adminUserCount = snapshot.size()
+            }
     }
     
     fun fetchUserData() {
@@ -71,11 +93,12 @@ class UserViewModel : ViewModel() {
             userEmail = "Not Logged In"
             userNationality = "-"
             isAdmin = false
-            selectedImageUri = null
+            // selectedImageUri = null // Keep image to prevent flickering/loss on logout
             registeredEventsCount = 0
             registrationsListener?.remove()
             registrationsListener = null
             myRegistrations = emptyList()
+            // profileImageEncoded = "" // Keep encoded string
             return
         }
 
@@ -122,11 +145,19 @@ class UserViewModel : ViewModel() {
 
                                 val firestoreName = userDoc.getString("fullName")
                                 val firestoreNationality = userDoc.getString("nationality")
-                                val firestorePhone = userDoc.getString("phone")
+                                val firestorePhone = userDoc.getString("phoneNumber") ?: userDoc.getString("phone")
+                                val firestoreImageEncoded = userDoc.getString("profileImageEncoded") ?: ""
 
                                 if (!firestoreName.isNullOrEmpty()) userName = firestoreName
                                 if (!firestoreNationality.isNullOrEmpty()) userNationality = firestoreNationality
                                 if (!firestorePhone.isNullOrEmpty()) userPhone = firestorePhone
+                                profileImageEncoded = firestoreImageEncoded
+                                
+                                if (firestoreImageEncoded.isNotEmpty()) {
+                                    selectedImageUri = Uri.parse("data:image/jpeg;base64,$firestoreImageEncoded")
+                                } else {
+                                    selectedImageUri = null
+                                }
                             }
                         }
                 }
@@ -274,6 +305,17 @@ class UserViewModel : ViewModel() {
             )
             db.collection("volunteers").document(user.uid)
                 .set(updates, SetOptions.merge())
+        }
+    }
+
+    fun saveAdminProfileImage(uri: Uri, base64: String) {
+        selectedImageUri = uri
+        profileImageEncoded = base64
+        val user = Firebase.auth.currentUser
+        if (user != null) {
+            val db = Firebase.firestore
+            db.collection("users").document(user.uid)
+                .update("profileImageEncoded", base64)
         }
     }
 }

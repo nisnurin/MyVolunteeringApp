@@ -114,8 +114,8 @@ fun OrganizerItem(organizer: Organizer) {
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.width(80.dp)
     ) {
-        Image(
-            painter = painterResource(id = organizer.imageResId),
+        AsyncImage(
+            model = organizer.imageUrl,
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier

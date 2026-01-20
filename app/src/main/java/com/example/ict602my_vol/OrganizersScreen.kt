@@ -22,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.tooling.preview.Preview
+import coil.compose.AsyncImage
 import com.example.ict602my_vol.data.Organizer
 import com.example.ict602my_vol.data.VolEvent
 
@@ -29,20 +30,20 @@ import com.example.ict602my_vol.data.VolEvent
 @Composable
 fun OrganizersScreenPreview() {
     val organizers = listOf(
-        Organizer("Amanah.Co", R.drawable.company_logo),
-        Organizer("MyHelper", R.drawable.company_logo),
-        Organizer("Runner", R.drawable.company_logo),
-        Organizer("Seaboree", R.drawable.company_logo),
-        Organizer("Event Organizer", R.drawable.company_logo),
-        Organizer("Scout", R.drawable.company_logo),
-        Organizer("Eventify", R.drawable.company_logo),
-        Organizer("CrewWorks", R.drawable.company_logo),
-        Organizer("UniEvents", R.drawable.company_logo),
-        Organizer("Voluntrix", R.drawable.company_logo),
-        Organizer("Campus Hub", R.drawable.company_logo),
-        Organizer("Youth Connect", R.drawable.company_logo),
-        Organizer("ProActive", R.drawable.company_logo),
-        Organizer("NextGen Events", R.drawable.company_logo),
+        Organizer("Amanah.Co", ""),
+        Organizer("MyHelper", ""),
+        Organizer("Runner", ""),
+        Organizer("Seaboree", ""),
+        Organizer("Event Organizer", ""),
+        Organizer("Scout", ""),
+        Organizer("Eventify", ""),
+        Organizer("CrewWorks", ""),
+        Organizer("UniEvents", ""),
+        Organizer("Voluntrix", ""),
+        Organizer("Campus Hub", ""),
+        Organizer("Youth Connect", ""),
+        Organizer("ProActive", ""),
+        Organizer("NextGen Events", ""),
     )
     OrganizersScreen(
         onBackClick = {
@@ -154,8 +155,8 @@ fun OrganizerListItem(organizer: Organizer) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Icon/Logo Organizer (Saiz 48dp)
-        Image(
-            painter = painterResource(id = organizer.imageResId),
+        AsyncImage(
+            model = organizer.imageUrl,
             contentDescription = "Organizer Icon",
             contentScale = ContentScale.Crop,
             modifier = Modifier

@@ -35,14 +35,8 @@ fun HomeScreen(
     // Controller for nested navigation within the Home Tab
     val homeNavController = rememberNavController()
 
-    // Sample data for organizers
-    val organizers = remember {
-        listOf(
-            Organizer("Amanah.Co", R.drawable.company_logo),
-            Organizer("MyHelper", R.drawable.company_logo),
-            Organizer("Runner", R.drawable.company_logo)
-        )
-    }
+    // Organizers from ViewModel
+    val organizers = viewModel.organizers
 
     // Handle reset signal (e.g., when clicking the Home icon in BottomBar)
     LaunchedEffect(shouldReset) {
