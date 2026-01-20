@@ -36,17 +36,17 @@ class ManageEventViewModel : ViewModel() {
 
     private fun listenToOrganizers() {
         organizerListener = db.collection("users")
+            .whereEqualTo("role", "admin")
             .addSnapshotListener { snapshot, error ->
                 if (error != null) return@addSnapshotListener
                 if (snapshot != null) {
                     _organizers.clear()
                     for (doc in snapshot.documents) {
                         val name = doc.getString("fullName") ?: "Unknown"
-                        val imageEncoded = doc.getString("profileImageEncoded")
-                        val finalImage = if (!imageEncoded.isNullOrEmpty()) "data:image/jpeg;base64,$imageEncoded" else ""
+                        val profilePicture = doc.getString("profile_picture") ?: ""
                         
                         if (name.isNotEmpty()) {
-                            _organizers.add(Organizer(name, finalImage))
+                            _organizers.add(Organizer(name, profilePicture))
                         }
                     }
                 }

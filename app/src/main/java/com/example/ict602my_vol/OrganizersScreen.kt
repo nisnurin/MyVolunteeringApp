@@ -1,5 +1,6 @@
 package com.example.ict602my_vol
 
+import android.util.Base64
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -12,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -143,6 +145,22 @@ fun OrganizersScreen(
 // ===================== 2. (Organizer List Item) =====================
 @Composable
 fun OrganizerListItem(organizer: Organizer) {
+    // Process image data safely (decoding Base64 from database)
+    val imageModel = remember(organizer.imageUrl) {
+        if (!organizer.imageUrl.isNullOrEmpty()) {
+            try {
+                val cleanBase64 = organizer.imageUrl.trim()
+                    .removePrefix("data:image/jpeg;base64,")
+                    .removePrefix("data:image/png;base64,")
+                Base64.decode(cleanBase64, Base64.DEFAULT)
+            } catch (e: Exception) {
+                R.drawable.location_pic
+            }
+        } else {
+            R.drawable.location_pic
+        }
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -156,13 +174,15 @@ fun OrganizerListItem(organizer: Organizer) {
     ) {
         // Icon/Logo Organizer (Saiz 48dp)
         AsyncImage(
-            model = organizer.imageUrl,
+            model = imageModel,
             contentDescription = "Organizer Icon",
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .size(48.dp)
                 .clip(CircleShape)
-                .background(Color.White)
+                .background(Color.White),
+            placeholder = painterResource(R.drawable.location_pic),
+            error = painterResource(R.drawable.location_pic)
         )
 
         Spacer(modifier = Modifier.width(16.dp))
