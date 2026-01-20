@@ -1,10 +1,8 @@
 package com.example.ict602my_vol
 
-import android.net.Uri
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.util.Base64
 import android.content.Context
+import android.net.Uri
+import com.example.ict602my_vol.utils.uriToBase64
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.*
@@ -53,7 +51,7 @@ fun AdminProfileScreen(
     val name = userViewModel.userName
     val email = userViewModel.userEmail
     val contact = userViewModel.userPhone
-    val selectedImageUri = userViewModel.selectedImageUri
+    val profilePictureBase64 = userViewModel.profilePictureBase64
 
     val context = LocalContext.current
 
@@ -64,7 +62,7 @@ fun AdminProfileScreen(
         if (uri != null) {
             val base64String = uriToBase64(context, uri)
             if (base64String != null) {
-                userViewModel.saveAdminProfileImage(uri, base64String)
+                userViewModel.saveAdminProfileImage(base64String)
             }
         }
     }
@@ -134,10 +132,10 @@ fun AdminProfileScreen(
                 border = BorderStroke(2.dp, Color.White),
                 color = Color.White
             ) {
-                if (selectedImageUri != null) {
-                    // Displays the selected image from URI (using Coil)
+                if (!profilePictureBase64.isNullOrEmpty()) {
+                    val imageUri = "data:image/jpeg;base64,$profilePictureBase64"
                     AsyncImage(
-                        model = selectedImageUri,
+                        model = imageUri,
                         contentDescription = "Profile Picture",
                         modifier = Modifier
                             .fillMaxSize()
@@ -251,35 +249,5 @@ fun AdminFieldItem(label: String, value: String) {
 fun AdminProfilePreview() {
     EventTest3Theme {
         AdminProfileScreen(onHomeClick = {}, onLogout = {})
-    }
-}
-
-fun uriToBase64(context: Context, uri: Uri): String? {
-    return try {
-        val inputStream = context.contentResolver.openInputStream(uri)
-        val originalBitmap = BitmapFactory.decodeStream(inputStream)
-        
-        // Resize if too big (e.g. max 500x500)
-        val maxDimension = 500
-        val scale = Math.min(
-            maxDimension.toFloat() / originalBitmap.width,
-            maxDimension.toFloat() / originalBitmap.height
-        )
-        
-        val bitmap = if (scale < 1) {
-            val newWidth = (originalBitmap.width * scale).toInt()
-            val newHeight = (originalBitmap.height * scale).toInt()
-            Bitmap.createScaledBitmap(originalBitmap, newWidth, newHeight, true)
-        } else {
-            originalBitmap
-        }
-
-        val outputStream = java.io.ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 70, outputStream)
-        val byteArray = outputStream.toByteArray()
-        Base64.encodeToString(byteArray, Base64.DEFAULT)
-    } catch (e: Exception) {
-        e.printStackTrace()
-        null
     }
 }

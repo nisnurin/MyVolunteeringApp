@@ -284,7 +284,8 @@ fun RegisterScreen(
                                 "state" to state,
                                 "emergencyContactName" to emergencyName,
                                 "emergencyContactPhone" to emergencyPhone,
-                                "role" to "volunteer"
+                                "role" to "volunteer",
+                                "profile_picture" to null
                             )
 
                             // 3. Save to registrations collection FIRST

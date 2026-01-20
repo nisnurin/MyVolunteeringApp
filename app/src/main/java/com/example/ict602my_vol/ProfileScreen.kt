@@ -1,6 +1,8 @@
 package com.example.ict602my_vol
 
 import android.net.Uri
+import android.util.Base64
+import com.example.ict602my_vol.utils.uriToBase64
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -17,6 +19,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -25,7 +29,6 @@ import com.example.ict602my_vol.ui.theme.BrandBlue
 import com.example.ict602my_vol.ui.theme.DarkBadge
 
 import android.widget.Toast
-import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun ProfileScreen(
@@ -37,12 +40,30 @@ fun ProfileScreen(
 ) {
     val context = LocalContext.current
     val selectedIndex = 0
+    val profilePictureBase64 = userViewModel.profilePictureBase64
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         if (uri != null) {
-            userViewModel.saveProfileImage(uri)
+            val base64String = uriToBase64(context, uri)
+            userViewModel.saveVolunteerProfileImage(base64String)
+        }
+    }
+
+    // Process image data safely
+    val imageModel = remember(profilePictureBase64) {
+        if (!profilePictureBase64.isNullOrEmpty()) {
+            try {
+                val cleanBase64 = profilePictureBase64.trim()
+                    .removePrefix("data:image/jpeg;base64,")
+                    .removePrefix("data:image/png;base64,")
+                Base64.decode(cleanBase64, Base64.DEFAULT)
+            } catch (e: Exception) {
+                R.drawable.location_pic
+            }
+        } else {
+            R.drawable.location_pic
         }
     }
 
@@ -113,13 +134,15 @@ fun ProfileScreen(
             color = Color.White
         ) {
             AsyncImage(
-                model = userViewModel.selectedImageUri ?: R.drawable.location_pic,
+                model = imageModel,
                 contentDescription = "Profile Picture",
                 modifier = Modifier
                     .fillMaxSize()
                     .clip(CircleShape)
                     .clickable { launcher.launch("image/*") },
-                contentScale = ContentScale.Crop
+                contentScale = ContentScale.Crop,
+                placeholder = painterResource(R.drawable.location_pic),
+                error = painterResource(R.drawable.location_pic)
             )
         }
 
@@ -182,7 +205,6 @@ fun ProfileScreen(
         }
     }
 }
-
 @Composable
 fun StatItem(count: String, label: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {

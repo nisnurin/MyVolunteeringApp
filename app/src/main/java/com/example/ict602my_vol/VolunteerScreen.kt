@@ -126,7 +126,8 @@ fun VolunteerScreen(
                                             "nationality" to nationality,
                                             "phone" to phone,
                                             "email" to email,
-                                            "role" to "volunteer"
+                                            "role" to "volunteer",
+                                            "profile_picture" to null
                                         )
                                         db.collection("users").document(userId)
                                             .set(userDetail)

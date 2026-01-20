@@ -99,7 +99,8 @@ fun AdminScreen(
                                     "phoneNumber" to phoneNumber,
                                     "email" to email,
                                     "password" to password,
-                                    "role" to "admin"
+                                    "role" to "admin",
+                                    "profile_picture" to null
                                 )
                                 db.collection("users").document(userId).set(adminData)
                                     .addOnSuccessListener {

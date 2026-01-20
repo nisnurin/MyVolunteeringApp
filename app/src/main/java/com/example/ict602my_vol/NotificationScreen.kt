@@ -19,6 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import android.util.Base64
 import com.example.ict602my_vol.UserViewModel
 // Import your custom colors
 import com.example.ict602my_vol.ui.theme.BrandBlue
@@ -50,6 +51,22 @@ fun NotificationScreen(padding: PaddingValues, userViewModel: UserViewModel) {
     // Get valid event data from UserViewModel to filter notifications
     val validEventIds = userViewModel.validEventIds
     val validEventNames = userViewModel.validEventNames
+
+    // Process image data safely
+    val imageModel = remember(userViewModel.profilePictureBase64) {
+        if (!userViewModel.profilePictureBase64.isNullOrEmpty()) {
+            try {
+                val cleanBase64 = userViewModel.profilePictureBase64!!.trim()
+                    .removePrefix("data:image/jpeg;base64,")
+                    .removePrefix("data:image/png;base64,")
+                Base64.decode(cleanBase64, Base64.DEFAULT)
+            } catch (e: Exception) {
+                R.drawable.location_pic
+            }
+        } else {
+            R.drawable.location_pic
+        }
+    }
 
     LaunchedEffect(currentUser, validEventIds, validEventNames) {
         if (currentUser != null) {
@@ -126,10 +143,12 @@ fun NotificationScreen(padding: PaddingValues, userViewModel: UserViewModel) {
                 ) {
                     // Displays the SAME image picked in the Profile screen
                     AsyncImage(
-                        model = userViewModel.selectedImageUri ?: R.drawable.location_pic,
+                        model = imageModel,
                         contentDescription = null,
                         modifier = Modifier.size(35.dp).clip(CircleShape),
-                        contentScale = ContentScale.Crop
+                        contentScale = ContentScale.Crop,
+                        placeholder = painterResource(R.drawable.location_pic),
+                        error = painterResource(R.drawable.location_pic)
                     )
 
                     Spacer(modifier = Modifier.width(10.dp))

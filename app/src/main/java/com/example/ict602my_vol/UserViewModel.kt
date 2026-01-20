@@ -15,8 +15,8 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
 class UserViewModel : ViewModel() {
-    // This variable holds the "Source of Truth" for the image
-    var selectedImageUri by mutableStateOf<Uri?>(null)
+    // This variable holds the "Source of Truth" for the image as a Base64 string
+    var profilePictureBase64 by mutableStateOf<String?>(null)
 
     // User details with default "Loading" state
     var userName by mutableStateOf("Loading...")
@@ -26,7 +26,7 @@ class UserViewModel : ViewModel() {
     var userPhone by mutableStateOf("-")
     var userGender by mutableStateOf("-")
     var userStory by mutableStateOf("I love volunteering!")
-    var profileImageEncoded by mutableStateOf("")
+
 
     // Stats
     var registeredEventsCount by mutableIntStateOf(0)
@@ -93,12 +93,11 @@ class UserViewModel : ViewModel() {
             userEmail = "Not Logged In"
             userNationality = "-"
             isAdmin = false
-            // selectedImageUri = null // Keep image to prevent flickering/loss on logout
             registeredEventsCount = 0
             registrationsListener?.remove()
             registrationsListener = null
             myRegistrations = emptyList()
-            // profileImageEncoded = "" // Keep encoded string
+            profilePictureBase64 = null
             return
         }
 
@@ -116,7 +115,7 @@ class UserViewModel : ViewModel() {
                     val vName = volunteerDoc.getString("fullName")
                     val vNationality = volunteerDoc.getString("nationality")
                     val vAbout = volunteerDoc.getString("aboutMe")
-                    val vImage = volunteerDoc.getString("profileImageUri")
+                    val vImageBase64 = volunteerDoc.getString("profile_picture")
                     val vEmergencyPhone = volunteerDoc.getString("emergencyContactPhone")
                     val vPhone = volunteerDoc.getString("phone")
                     val vGender = volunteerDoc.getString("gender")
@@ -125,7 +124,7 @@ class UserViewModel : ViewModel() {
                     if (!vName.isNullOrEmpty()) userName = vName
                     if (!vNationality.isNullOrEmpty()) userNationality = vNationality
                     if (!vAbout.isNullOrEmpty()) userAboutMe = vAbout
-                    if (!vImage.isNullOrEmpty()) selectedImageUri = Uri.parse(vImage)
+                    profilePictureBase64 = vImageBase64
                     if (!vStory.isNullOrEmpty()) userStory = vStory
                     
                     // Prioritize phone (signup phone) if available, otherwise fallback or keep default
@@ -146,18 +145,12 @@ class UserViewModel : ViewModel() {
                                 val firestoreName = userDoc.getString("fullName")
                                 val firestoreNationality = userDoc.getString("nationality")
                                 val firestorePhone = userDoc.getString("phoneNumber") ?: userDoc.getString("phone")
-                                val firestoreImageEncoded = userDoc.getString("profileImageEncoded") ?: ""
+                                val firestoreImageBase64 = userDoc.getString("profile_picture")
 
                                 if (!firestoreName.isNullOrEmpty()) userName = firestoreName
                                 if (!firestoreNationality.isNullOrEmpty()) userNationality = firestoreNationality
                                 if (!firestorePhone.isNullOrEmpty()) userPhone = firestorePhone
-                                profileImageEncoded = firestoreImageEncoded
-                                
-                                if (firestoreImageEncoded.isNotEmpty()) {
-                                    selectedImageUri = Uri.parse("data:image/jpeg;base64,$firestoreImageEncoded")
-                                } else {
-                                    selectedImageUri = null
-                                }
+                                profilePictureBase64 = firestoreImageBase64
                             }
                         }
                 }
@@ -166,6 +159,7 @@ class UserViewModel : ViewModel() {
                 Log.e("UserViewModel", "Error fetching user data from Firestore", e)
                 // Fallback to auth data if Firestore fails
                 if (userNationality == "Loading...") userNationality = "Unknown Location"
+                profilePictureBase64 = null // Ensure profile picture is cleared on error
             }
     }
 
@@ -295,27 +289,39 @@ class UserViewModel : ViewModel() {
         }
     }
 
-    fun saveProfileImage(uri: Uri) {
-        selectedImageUri = uri
+    fun saveVolunteerProfileImage(base64String: String?) {
+        profilePictureBase64 = base64String
         val user = Firebase.auth.currentUser
         if (user != null) {
             val db = Firebase.firestore
-            val updates = hashMapOf<String, Any>(
-                "profileImageUri" to uri.toString()
+            val updates = hashMapOf<String, Any?>(
+                "profile_picture" to base64String
             )
+            // Update volunteers collection
             db.collection("volunteers").document(user.uid)
+                .set(updates, SetOptions.merge())
+            
+            // Also update users collection for consistency
+            db.collection("users").document(user.uid)
                 .set(updates, SetOptions.merge())
         }
     }
 
-    fun saveAdminProfileImage(uri: Uri, base64: String) {
-        selectedImageUri = uri
-        profileImageEncoded = base64
+    fun saveAdminProfileImage(base64String: String?) {
+        profilePictureBase64 = base64String
         val user = Firebase.auth.currentUser
         if (user != null) {
             val db = Firebase.firestore
+            val updates = hashMapOf<String, Any?>(
+                "profile_picture" to base64String
+            )
+            // Update users collection
             db.collection("users").document(user.uid)
-                .update("profileImageEncoded", base64)
+                .set(updates, SetOptions.merge())
+            
+            // Also update volunteers collection if it exists
+            db.collection("volunteers").document(user.uid)
+                .set(updates, SetOptions.merge())
         }
     }
 }
