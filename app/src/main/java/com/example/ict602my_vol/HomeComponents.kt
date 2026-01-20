@@ -1,5 +1,6 @@
 package com.example.ict602my_vol.ui.home
 
+import android.util.Base64
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -17,6 +18,7 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -110,19 +112,37 @@ fun OrganizerSection(organizers: List<Organizer>, onViewAllClick: () -> Unit) {
 
 @Composable
 fun OrganizerItem(organizer: Organizer) {
+    // Process image data safely
+    val imageModel = remember(organizer.imageUrl) {
+        if (!organizer.imageUrl.isNullOrEmpty()) {
+            try {
+                val cleanBase64 = organizer.imageUrl.trim()
+                    .removePrefix("data:image/jpeg;base64,")
+                    .removePrefix("data:image/png;base64,")
+                Base64.decode(cleanBase64, Base64.DEFAULT)
+            } catch (e: Exception) {
+                R.drawable.location_pic
+            }
+        } else {
+            R.drawable.location_pic
+        }
+    }
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.width(80.dp)
     ) {
         AsyncImage(
-            model = organizer.imageUrl,
+            model = imageModel,
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .size(70.dp)
                 .clip(CircleShape)
                 .background(Color.White)
-                .border(1.dp, Color.White.copy(alpha = 0.3f), CircleShape)
+                .border(1.dp, Color.White.copy(alpha = 0.3f), CircleShape),
+            placeholder = painterResource(R.drawable.location_pic),
+            error = painterResource(R.drawable.location_pic)
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
